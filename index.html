@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lokkal — Marcas Colombianas</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB6SWo8awRffc0NHH1Dn7iM8NCHaMgSTbk",
+  authDomain: "lokkal-a04e2.firebaseapp.com",
+  projectId: "lokkal-a04e2",
+  storageBucket: "lokkal-a04e2.firebasestorage.app",
+  messagingSenderId: "1083392003070",
+  appId: "1:1083392003070:web:aae4911a0867e5ec054eaf"
+};
+
+const CLOUD_NAME = "dxacndwfh";
+const UPLOAD_PRESET = "lokkal_unsigned";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let allProducts = [];
+let currentFeedIndex = 0;
+let currentView = 'feed';
+
+// AUTH STATE
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  updateNavUI(user);
+  if (currentView === 'feed') loadFeed();
+});
+
+function updateNavUI(user) {
+  const navAuth = document.getElementById('navAuth');
+  const navUser = document.getElementById('navUser');
+  if (user) {
+    navAuth.style.display = 'none';
+    navUser.style.display = 'flex';
+    document.getElementById('navAvatar').textContent = user.displayName ? user.displayName[0].toUpperCase() : user.email[0].toUpperCase();
+  } else {
+    navAuth.style.display = 'flex';
+    navUser.style.display = 'none';
+  }
+}
+
+// VIEWS
+window.showView = function(view) {
+  currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+  document.getElementById('view-' + view).style.display = 'block';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const tab = document.querySelector(`[data-view="${view}"]`);
+  if (tab) tab.classList.add('active');
+  if (view === 'feed') loadFeed();
+  if (view === 'explore') loadExplore();
+  if (view === 'profile' && currentUser) loadProfile();
+};
+
+// CLOUDINARY UPLOAD
+async function uploadToCloudinary(file, type = 'image') {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  formData.append('cloud_name', CLOUD_NAME);
+  const resourceType = type === 'video' ? 'video' : 'image';
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
+    method: 'POST', body: formData
+  });
+  const data = await res.json();
+  return data.secure_url;
+}
+
+// LOAD FEED
+async function loadFeed() {
+  const feedContainer = document.getElementById('feedContainer');
+  feedContainer.innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    allProducts = [];
+    snapshot.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
+    // Shuffle
+    allProducts = allProducts.sort(() => Math.random() - 0.5);
+    currentFeedIndex = 0;
+    renderFeed();
+  } catch(e) {
+    feedContainer.innerHTML = '<div class="empty-state">📦<br>Sé el primero en publicar un producto</div>';
+  }
+}
+
+function renderFeed() {
+  const feedContainer = document.getElementById('feedContainer');
+  if (allProducts.length === 0) {
+    feedContainer.innerHTML = '<div class="empty-state">📦<br>Sé el primero en publicar un producto</div>';
+    return;
+  }
+  feedContainer.innerHTML = '';
+  allProducts.forEach((product, i) => {
+    const card = createFeedCard(product, i);
+    feedContainer.appendChild(card);
+  });
+  // Snap scroll observer
+  setupFeedObserver();
+}
+
+function createFeedCard(product, index) {
+  const card = document.createElement('div');
+  card.className = 'feed-card';
+  card.dataset.index = index;
+  const isVideo = product.mediaType === 'video';
+  const mediaHTML = isVideo
+    ? `<video class="feed-media" src="${product.mediaUrl}" loop muted playsinline></video>`
+    : `<img class="feed-media" src="${product.mediaUrl || ''}" alt="${product.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22600%22><rect fill=%22%23222%22 width=%22400%22 height=%22600%22/><text fill=%22%23666%22 font-size=%2240%22 x=%22200%22 y=%22310%22 text-anchor=%22middle%22>📦</text></svg>'">`;
+
+  card.innerHTML = `
+    ${mediaHTML}
+    <div class="feed-overlay">
+      <div class="feed-brand">
+        <div class="feed-avatar">${product.brandName ? product.brandName[0] : '?'}</div>
+        <div>
+          <div class="feed-brand-name">${product.brandName || 'Marca'}</div>
+          <div class="feed-brand-city">${product.city || 'Colombia'}</div>
+        </div>
+        ${product.brandUrl ? `<a href="${product.brandUrl}" target="_blank" class="feed-web-btn">🌐 Web</a>` : ''}
+      </div>
+      <div class="feed-info">
+        <div class="feed-product-name">${product.name}</div>
+        <div class="feed-price">$${Number(product.price).toLocaleString('es-CO')}</div>
+        ${product.colors?.length ? `<div class="feed-colors">${product.colors.map(c => `<span class="color-dot" style="background:${c}" title="${c}"></span>`).join('')}</div>` : ''}
+        ${product.sizes?.length ? `<div class="feed-sizes">${product.sizes.map(s => `<span class="size-tag">${s}</span>`).join('')}</div>` : ''}
+        <div class="feed-desc">${product.description || ''}</div>
+        <a href="https://wa.me/${product.whatsapp}?text=Hola! Vi ${encodeURIComponent(product.name)} en Lokkal, me interesa 🛍️" target="_blank" class="feed-whatsapp">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.113 1.527 5.842L.057 23.999l6.306-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.795 9.795 0 01-4.988-1.365l-.358-.213-3.712.974.991-3.618-.234-.372A9.78 9.78 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+          Pedir por WhatsApp
+        </a>
+      </div>
+    </div>
+  `;
+
+  // Play video when visible
+  if (isVideo) {
+    const video = card.querySelector('video');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => e.isIntersecting ? video.play() : video.pause());
+    }, { threshold: 0.6 });
+    obs.observe(card);
+  }
+  return card;
+}
+
+function setupFeedObserver() {
+  // nothing extra needed, CSS snap handles it
+}
+
+// LOAD EXPLORE
+async function loadExplore() {
+  const exploreGrid = document.getElementById('exploreGrid');
+  exploreGrid.innerHTML = '<div class="loading">Cargando marcas...</div>';
+  try {
+    const snapshot = await getDocs(collection(db, 'brands'));
+    const brands = [];
+    snapshot.forEach(doc => brands.push({ id: doc.id, ...doc.data() }));
+    if (brands.length === 0) {
+      exploreGrid.innerHTML = '<div class="empty-state">🏪<br>Aún no hay marcas registradas.<br>¡Sé el primero!</div>';
+      return;
+    }
+    exploreGrid.innerHTML = '';
+    brands.forEach(brand => {
+      const card = document.createElement('div');
+      card.className = 'explore-card';
+      card.innerHTML = `
+        <div class="explore-cover" style="background:${brand.coverColor || '#222'}">
+          ${brand.coverUrl ? `<img src="${brand.coverUrl}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:2rem">${brand.emoji || '🏪'}</span>`}
+        </div>
+        <div class="explore-body">
+          <div class="explore-avatar" style="background:${brand.color || '#e8431a'}">${brand.name[0]}</div>
+          <div class="explore-name">${brand.name}</div>
+          <div class="explore-cat">${brand.category || 'General'} · ${brand.city || 'Colombia'}</div>
+          <div class="explore-desc">${brand.description || ''}</div>
+          ${brand.website ? `<a href="${brand.website}" target="_blank" class="explore-web">🌐 Visitar web</a>` : ''}
+        </div>
+      `;
+      exploreGrid.appendChild(card);
+    });
+  } catch(e) {
+    exploreGrid.innerHTML = '<div class="empty-state">Error cargando marcas</div>';
+  }
+}
+
+// PUBLISH PRODUCT
+window.openPublish = function() {
+  if (!currentUser) { showView('login'); return; }
+  document.getElementById('modalPublish').style.display = 'flex';
+};
+window.closePublish = function() {
+  document.getElementById('modalPublish').style.display = 'none';
+};
+
+let selectedColors = [];
+let selectedSizes = [];
+
+window.toggleColor = function(color, el) {
+  if (selectedColors.includes(color)) {
+    selectedColors = selectedColors.filter(c => c !== color);
+    el.classList.remove('selected');
+  } else {
+    selectedColors.push(color);
+    el.classList.add('selected');
+  }
+};
+
+window.toggleSize = function(size, el) {
+  if (selectedSizes.includes(size)) {
+    selectedSizes = selectedSizes.filter(s => s !== size);
+    el.classList.remove('selected');
+  } else {
+    selectedSizes.push(size);
+    el.classList.add('selected');
+  }
+};
+
+window.submitProduct = async function() {
+  if (!currentUser) return;
+  const name = document.getElementById('prodName').value.trim();
+  const price = document.getElementById('prodPrice').value.trim();
+  const desc = document.getElementById('prodDesc').value.trim();
+  const whatsapp = document.getElementById('prodWhatsapp').value.trim();
+  const brandName = document.getElementById('prodBrand').value.trim();
+  const city = document.getElementById('prodCity').value.trim();
+  const brandUrl = document.getElementById('prodBrandUrl').value.trim();
+  const file = document.getElementById('prodMedia').files[0];
+
+  if (!name || !price || !file || !whatsapp || !brandName) {
+    showToast('Completa los campos obligatorios'); return;
+  }
+
+  const btn = document.getElementById('btnPublish');
+  btn.textContent = 'Subiendo...'; btn.disabled = true;
+
+  try {
+    const isVideo = file.type.startsWith('video');
+    showToast('Subiendo archivo... espera');
+    const mediaUrl = await uploadToCloudinary(file, isVideo ? 'video' : 'image');
+
+    await addDoc(collection(db, 'products'), {
+      name, price: Number(price), description: desc,
+      whatsapp: whatsapp.replace(/\D/g,''),
+      brandName, city, brandUrl,
+      mediaUrl, mediaType: isVideo ? 'video' : 'image',
+      colors: selectedColors, sizes: selectedSizes,
+      userId: currentUser.uid,
+      createdAt: serverTimestamp()
+    });
+
+    closePublish();
+    showToast('¡Producto publicado! 🎉');
+    selectedColors = []; selectedSizes = [];
+    document.getElementById('publishForm').reset();
+    loadFeed();
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  } finally {
+    btn.textContent = 'Publicar producto';
+    btn.disabled = false;
+  }
+};
+
+// REGISTER BRAND
+window.submitBrand = async function() {
+  if (!currentUser) return;
+  const name = document.getElementById('brandName').value.trim();
+  const category = document.getElementById('brandCat').value;
+  const city = document.getElementById('brandCity').value.trim();
+  const desc = document.getElementById('brandDesc').value.trim();
+  const website = document.getElementById('brandWebsite').value.trim();
+  const whatsapp = document.getElementById('brandWhatsapp').value.trim();
+
+  if (!name || !city || !whatsapp) { showToast('Completa los campos obligatorios'); return; }
+
+  try {
+    await addDoc(collection(db, 'brands'), {
+      name, category, city, description: desc,
+      website, whatsapp: whatsapp.replace(/\D/g,''),
+      userId: currentUser.uid,
+      color: '#' + Math.floor(Math.random()*16777215).toString(16),
+      createdAt: serverTimestamp()
+    });
+    document.getElementById('modalBrand').style.display = 'none';
+    showToast('¡Marca registrada! 🎉');
+    showView('explore');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+};
+
+// AUTH
+window.loginGoogle = async function() {
+  try {
+    await signInWithPopup(auth, provider);
+    showView('feed');
+    showToast('¡Bienvenido! 🎉');
+  } catch(e) { showToast('Error: ' + e.message); }
+};
+
+window.loginEmail = async function() {
+  const email = document.getElementById('loginEmail').value;
+  const pass = document.getElementById('loginPass').value;
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    showView('feed');
+    showToast('¡Bienvenido de vuelta!');
+  } catch(e) { showToast('Email o contraseña incorrectos'); }
+};
+
+window.registerEmail = async function() {
+  const email = document.getElementById('regEmail').value;
+  const pass = document.getElementById('regPass').value;
+  try {
+    await createUserWithEmailAndPassword(auth, email, pass);
+    showView('feed');
+    showToast('¡Cuenta creada! 🎉');
+  } catch(e) { showToast('Error: ' + e.message); }
+};
+
+window.logout = async function() {
+  await signOut(auth);
+  showToast('Sesión cerrada');
+  showView('feed');
+};
+
+window.openBrandModal = function() {
+  if (!currentUser) { showView('login'); return; }
+  document.getElementById('modalBrand').style.display = 'flex';
+};
+window.closeBrandModal = function() {
+  document.getElementById('modalBrand').style.display = 'none';
+};
+
+// MEDIA PREVIEW
+window.previewMedia = function(input) {
+  const preview = document.getElementById('mediaPreview');
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  if (file.type.startsWith('video')) {
+    preview.innerHTML = `<video src="${url}" controls style="max-width:100%;max-height:200px;border-radius:8px"></video>`;
+  } else {
+    preview.innerHTML = `<img src="${url}" style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover">`;
+  }
+};
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+window.showTab = function(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-panel').forEach(p => p.style.display = 'none');
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).style.display = 'block';
+};
+
+// Load feed on start
+loadFeed();
+</script>
+<style>
+:root{--bg:#0a0a0a;--surface:#111;--surface2:#1a1a1a;--accent:#e8431a;--accent2:#f2a649;--text:#f5f0e8;--muted:#888;--border:rgba(255,255,255,0.08);--radius:16px;--font:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--body)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0.8rem 1.2rem;background:rgba(10,10,10,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--text);letter-spacing:-0.02em;cursor:pointer}
+.nav-logo span{color:var(--accent)}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{background:none;border:none;color:var(--muted);font-family:var(--font);font-size:0.8rem;font-weight:600;padding:6px 14px;border-radius:50px;cursor:pointer;transition:all 0.2s}
+.nav-tab.active,.nav-tab:hover{background:var(--surface2);color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:8px}
+#navAuth{display:flex;gap:6px}
+#navUser{display:none;align-items:center;gap:10px}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:0.85rem;font-weight:700;cursor:pointer}
+.btn-nav{background:var(--accent);color:white;border:none;border-radius:50px;padding:7px 16px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+.btn-nav:hover{opacity:0.85}
+.btn-nav.ghost{background:var(--surface2);color:var(--text)}
+.btn-publish{background:var(--accent2);color:#0a0a0a;border:none;border-radius:50px;padding:7px 14px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px}
+
+/* MAIN */
+.main{height:100vh;padding-top:56px;overflow:hidden}
+.view{height:100%;display:none}
+#view-feed{display:block}
+
+/* FEED */
+.feed-container{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+.feed-container::-webkit-scrollbar{display:none}
+.feed-card{height:100%;scroll-snap-align:start;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.feed-media{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.feed-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 50%,rgba(0,0,0,0.3) 100%);display:flex;flex-direction:column;justify-content:space-between;padding:1rem}
+.feed-brand{display:flex;align-items:center;gap:10px;margin-top:0.5rem}
+.feed-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:1rem;font-weight:700;flex-shrink:0;border:2px solid white}
+.feed-brand-name{font-family:var(--font);font-size:0.9rem;font-weight:700}
+.feed-brand-city{font-size:0.72rem;color:rgba(255,255,255,0.6)}
+.feed-web-btn{margin-left:auto;background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:50px;padding:5px 12px;font-size:0.75rem;text-decoration:none;font-family:var(--font);font-weight:600}
+.feed-info{margin-top:auto}
+.feed-product-name{font-family:var(--font);font-size:1.2rem;font-weight:700;margin-bottom:4px}
+.feed-price{font-family:var(--font);font-size:1.4rem;font-weight:800;color:var(--accent2);margin-bottom:8px}
+.feed-colors{display:flex;gap:6px;margin-bottom:8px}
+.color-dot{width:20px;height:20px;border-radius:50%;border:2px solid white;flex-shrink:0}
+.feed-sizes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.size-tag{background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:6px;padding:3px 10px;font-size:0.75rem;font-family:var(--font);font-weight:600}
+.feed-desc{font-size:0.83rem;color:rgba(255,255,255,0.75);margin-bottom:12px;line-height:1.4}
+.feed-whatsapp{display:inline-flex;align-items:center;gap:8px;background:#25d366;color:white;border:none;border-radius:50px;padding:11px 22px;font-family:var(--font);font-size:0.88rem;font-weight:700;cursor:pointer;text-decoration:none;transition:opacity 0.2s}
+.feed-whatsapp:hover{opacity:0.9}
+
+/* EXPLORE */
+#view-explore{overflow-y:auto;padding:1rem}
+.explore-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.explore-title{font-family:var(--font);font-size:1.3rem;font-weight:700}
+.btn-add-brand{background:var(--accent);color:white;border:none;border-radius:50px;padding:8px 16px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer}
+.explore-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.explore-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform 0.2s}
+.explore-card:hover{transform:translateY(-3px)}
+.explore-cover{height:120px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.explore-body{padding:1rem}
+.explore-avatar{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:1.1rem;font-weight:700;color:white;margin-bottom:8px;margin-top:-28px;border:3px solid var(--surface)}
+.explore-name{font-family:var(--font);font-size:1rem;font-weight:700;margin-bottom:2px}
+.explore-cat{font-size:0.75rem;color:var(--muted);margin-bottom:8px}
+.explore-desc{font-size:0.82rem;color:rgba(245,240,232,0.6);margin-bottom:10px;line-height:1.5}
+.explore-web{display:inline-block;font-size:0.8rem;color:var(--accent2);text-decoration:none}
+
+/* LOGIN VIEW */
+#view-login{display:flex;align-items:center;justify-content:center;overflow-y:auto}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:380px;margin:1rem}
+.auth-logo{font-family:var(--font);font-size:1.8rem;font-weight:800;text-align:center;margin-bottom:0.3rem}
+.auth-logo span{color:var(--accent)}
+.auth-sub{text-align:center;color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem}
+.auth-tabs{display:flex;background:var(--surface2);border-radius:50px;padding:3px;margin-bottom:1.5rem}
+.auth-tab{flex:1;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:0.82rem;font-weight:600;padding:7px;border-radius:50px;cursor:pointer;transition:all 0.2s}
+.auth-tab.active{background:var(--surface);color:var(--text)}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:white;color:#333;border:none;border-radius:50px;padding:11px;font-family:var(--font);font-size:0.88rem;font-weight:600;cursor:pointer;margin-bottom:1rem;transition:opacity 0.2s}
+.btn-google:hover{opacity:0.9}
+.divider{display:flex;align-items:center;gap:10px;margin-bottom:1rem;color:var(--muted);font-size:0.78rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* PROFILE VIEW */
+#view-profile{overflow-y:auto;padding:1rem}
+.profile-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;text-align:center}
+.profile-av{width:64px;height:64px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:1.8rem;font-weight:700;margin:0 auto 0.8rem}
+.profile-name{font-family:var(--font);font-size:1.1rem;font-weight:700}
+.profile-email{font-size:0.82rem;color:var(--muted)}
+.btn-logout{background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:50px;padding:7px 16px;font-family:var(--font);font-size:0.8rem;cursor:pointer;margin-top:1rem}
+
+/* FORMS */
+.form-group{margin-bottom:0.9rem}
+.form-label{font-size:0.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;display:block;letter-spacing:0.06em;text-transform:uppercase}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--body);font-size:0.88rem;background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+.form-select option{background:var(--surface2)}
+.form-textarea{resize:vertical;min-height:70px}
+.btn-submit{width:100%;background:var(--accent);color:white;border:none;border-radius:50px;padding:13px;font-family:var(--font);font-size:0.92rem;font-weight:700;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s}
+.btn-submit:hover{opacity:0.9}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed}
+
+/* COLORS PICKER */
+.colors-grid{display:flex;flex-wrap:wrap;gap:8px}
+.color-btn{width:28px;height:28px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:border-color 0.2s}
+.color-btn.selected{border-color:white}
+.sizes-grid{display:flex;flex-wrap:wrap;gap:6px}
+.size-btn{background:var(--surface2);border:1.5px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-family:var(--font);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.size-btn.selected{background:var(--accent);border-color:var(--accent);color:white}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;padding:1.5rem;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;position:relative}
+@media(min-width:600px){.modal{border-radius:var(--radius)}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.2rem}
+.modal-title{font-family:var(--font);font-size:1.2rem;font-weight:700;margin-bottom:0.3rem}
+.modal-sub{font-size:0.82rem;color:var(--muted);margin-bottom:1.2rem}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--surface2);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:1rem}
+
+/* MEDIA UPLOAD */
+.upload-area{border:2px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:border-color 0.2s;margin-bottom:0.5rem}
+.upload-area:hover{border-color:var(--accent)}
+.upload-icon{font-size:1.8rem;margin-bottom:0.5rem}
+.upload-text{font-size:0.82rem;color:var(--muted)}
+
+/* STATES */
+.loading{text-align:center;padding:3rem;color:var(--muted);font-family:var(--font)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:0.9rem;line-height:2}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);border:1px solid var(--border);padding:10px 22px;border-radius:50px;font-size:0.83rem;font-family:var(--font);font-weight:600;z-index:300;transition:all 0.3s;opacity:0;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* BOTTOM NAV MOBILE */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;z-index:100}
+.bottom-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:0.65rem;font-weight:600;cursor:pointer;transition:color 0.2s}
+.bottom-tab.active,.bottom-tab:hover{color:var(--text)}
+.bottom-tab svg{width:20px;height:20px}
+.bottom-tab.publish-tab{color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo" onclick="showView('feed')">lokk<span>al</span></span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-view="feed" onclick="showView('feed')">Feed</button>
+    <button class="nav-tab" data-view="explore" onclick="showView('explore')">Marcas</button>
+  </div>
+  <div class="nav-right">
+    <div id="navAuth">
+      <button class="btn-nav ghost" onclick="showView('login')">Entrar</button>
+    </div>
+    <div id="navUser">
+      <button class="btn-publish" onclick="openPublish()">+ Publicar</button>
+      <div class="nav-avatar" id="navAvatar" onclick="showView('profile')">?</div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- FEED -->
+  <div id="view-feed" class="view">
+    <div class="feed-container" id="feedContainer">
+      <div class="loading">Cargando feed...</div>
+    </div>
+  </div>
+
+  <!-- EXPLORE BRANDS -->
+  <div id="view-explore" class="view">
+    <div class="explore-header">
+      <div class="explore-title">Marcas</div>
+      <button class="btn-add-brand" onclick="openBrandModal()">+ Registrar marca</button>
+    </div>
+    <div class="explore-grid" id="exploreGrid">
+      <div class="loading">Cargando...</div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="view-login" class="view">
+    <div class="auth-box">
+      <div class="auth-logo">lokk<span>al</span></div>
+      <div class="auth-sub">Entra para publicar y vender</div>
+      <button class="btn-google" onclick="loginGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar con Google
+      </button>
+      <div class="divider">o</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="showTab('login')">Iniciar sesión</button>
+        <button class="auth-tab" onclick="showTab('register')">Registrarse</button>
+      </div>
+      <div id="panel-login">
+        <div class="form-group">
+          <label class="form-label">Correo</label>
+          <input class="form-input" type="email" id="loginEmail" placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <input class="form-input" type="password" id="loginPass" placeholder="••••••••">
+        </div>
+        <button class="btn-submit" onclick="loginEmail()">Iniciar sesión</button>
+      </div>
+      <div id="panel-register" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Correo</label>
+          <input class="form-input" type="email" id="regEmail" placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <input class="form-input" type="password" id="regPass" placeholder="mínimo 6 caracteres">
+        </div>
+        <button class="btn-submit" onclick="registerEmail()">Crear cuenta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="view-profile" class="view">
+    <div class="profile-header">
+      <div class="profile-av" id="profileAv">?</div>
+      <div class="profile-name" id="profileName">—</div>
+      <div class="profile-email" id="profileEmail">—</div>
+      <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="bottom-tab active" onclick="showView('feed')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Feed
+  </button>
+  <button class="bottom-tab" onclick="showView('explore')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Marcas
+  </button>
+  <button class="bottom-tab publish-tab" onclick="openPublish()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Publicar
+  </button>
+  <button class="bottom-tab" onclick="showView('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Perfil
+  </button>
+</div>
+
+<!-- MODAL PUBLISH -->
+<div class="modal-overlay" id="modalPublish">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closePublish()">✕</button>
+    <div class="modal-title">Publicar producto</div>
+    <div class="modal-sub">Foto o video de tu producto</div>
+    <form id="publishForm">
+      <div class="form-group">
+        <label class="upload-area" for="prodMedia">
+          <div class="upload-icon">📸</div>
+          <div class="upload-text">Toca para subir foto o video</div>
+        </label>
+        <input type="file" id="prodMedia" accept="image/*,video/*" style="display:none" onchange="previewMedia(this)">
+        <div id="mediaPreview"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre del producto *</label>
+        <input class="form-input" type="text" id="prodName" placeholder="Ej: Body Floral Negro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Precio (COP) *</label>
+        <input class="form-input" type="number" id="prodPrice" placeholder="85000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre de tu marca *</label>
+        <input class="form-input" type="text" id="prodBrand" placeholder="Ej: JASY Boutique">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ciudad</label>
+        <input class="form-input" type="text" id="prodCity" placeholder="Barranquilla">
+      </div>
+      <div class="form-group">
+        <label class="form-label">WhatsApp de contacto *</label>
+        <input class="form-input" type="tel" id="prodWhatsapp" placeholder="+57 300 000 0000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Página web (si tienes)</label>
+        <input class="form-input" type="url" id="prodBrandUrl" placeholder="https://tumarca.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Colores disponibles</label>
+        <div class="colors-grid">
+          ${['#000000','#ffffff','#e8431a','#f2a649','#2d6a4f','#185fa5','#6b2fa0','#ff9eb5','#c8f0a0','#fbeaf0'].map(c => `<div class="color-btn" style="background:${c}" onclick="toggleColor('${c}', this)"></div>`).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tallas disponibles</label>
+        <div class="sizes-grid">
+          ${['XS','S','M','L','XL','XXL','Único','6','7','8','9','10'].map(s => `<button type="button" class="size-btn" onclick="toggleSize('${s}', this)">${s}</button>`).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-textarea" id="prodDesc" placeholder="Describe tu producto..."></textarea>
+      </div>
+      <button type="button" class="btn-submit" id="btnPublish" onclick="submitProduct()">Publicar producto 🚀</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL BRAND -->
+<div class="modal-overlay" id="modalBrand">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeBrandModal()">✕</button>
+    <div class="modal-title">Registrar marca</div>
+    <div class="modal-sub">Gratis para siempre</div>
+    <div class="form-group">
+      <label class="form-label">Nombre de la marca *</label>
+      <input class="form-input" type="text" id="brandName" placeholder="Mi Marca CO">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Categoría</label>
+      <select class="form-select" id="brandCat">
+        <option>Moda y ropa</option>
+        <option>Comida y bebidas</option>
+        <option>Belleza y cuidado</option>
+        <option>Tecnología</option>
+        <option>Arte y diseño</option>
+        <option>Hogar</option>
+        <option>Deportes</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ciudad *</label>
+      <input class="form-input" type="text" id="brandCity" placeholder="Barranquilla">
+    </div>
+    <div class="form-group">
+      <label class="form-label">WhatsApp *</label>
+      <input class="form-input" type="tel" id="brandWhatsapp" placeholder="+57 300 000 0000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Página web (si tienes)</label>
+      <input class="form-input" type="url" id="brandWebsite" placeholder="https://tumarca.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descripción</label>
+      <textarea class="form-textarea" id="brandDesc" placeholder="Cuéntanos sobre tu marca..."></textarea>
+    </div>
+    <button type="button" class="btn-submit" onclick="submitBrand()">Registrar marca gratis 🚀</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// Profile view update
+function loadProfile() {
+  if (!window._currentUser) return;
+  const u = window._currentUser;
+  document.getElementById('profileAv').textContent = u.displayName ? u.displayName[0].toUpperCase() : u.email[0].toUpperCase();
+  document.getElementById('profileName').textContent = u.displayName || 'Usuario';
+  document.getElementById('profileEmail').textContent = u.email;
+}
+// Bottom nav active state
+document.querySelectorAll('.bottom-tab').forEach((tab, i) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
