@@ -2,876 +2,464 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Lokkal — Marcas Colombianas</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0a0a;
-  --surface: #111;
-  --surface2: #1a1a1a;
-  --accent: #e8431a;
-  --accent2: #f2a649;
-  --text: #f5f0e8;
-  --muted: #888;
-  --border: rgba(255,255,255,0.08);
-  --radius: 16px;
+  --bg: #000000;
+  --s1: #0d0d0d;
+  --s2: #141414;
+  --s3: #1e1e1e;
+  --s4: #2a2a2a;
+  --accent: #ff5722;
+  --accent-glow: rgba(255,87,34,0.35);
+  --accent2: #ffab40;
+  --neon: linear-gradient(135deg, #ff5722, #ffab40);
+  --text: #f8f4ef;
+  --muted: #666;
+  --muted2: #444;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --r: 14px;
+  --r2: 20px;
   --font: 'Syne', sans-serif;
   --body: 'Instrument Sans', sans-serif;
+  --ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--body);
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--body); height: 100%; overflow: hidden; -webkit-font-smoothing: antialiased; }
 
-/* NAV */
+/* ── SPINNER ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 22px; height: 22px; border: 2.5px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; height: 100%; min-height: 200px; color: var(--muted); font-size: 0.82rem; }
+
+/* ── NAV ── */
 nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.8rem 1.2rem;
-  background: rgba(10,10,10,0.9);
-  backdrop-filter: blur(12px);
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 52px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1rem;
+  background: rgba(0,0,0,0.88); backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border);
 }
-.nav-logo {
-  font-family: var(--font);
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.02em;
-  cursor: pointer;
-}
-.nav-logo span {
-  color: var(--accent);
-}
-.nav-tabs {
-  display: flex;
-  gap: 4px;
-}
-.nav-tab {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.nav-tab.active, .nav-tab:hover {
-  background: var(--surface2);
-  color: var(--text);
-}
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-#navAuth {
-  display: flex;
-  gap: 6px;
-}
-#navUser {
-  display: none;
-  align-items: center;
-  gap: 10px;
-}
-.nav-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-.btn-nav {
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 7px 16px;
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-nav:hover {
-  opacity: 0.85;
-}
-.btn-nav.ghost {
-  background: var(--surface2);
-  color: var(--text);
-}
-.btn-publish {
-  background: var(--accent2);
-  color: #0a0a0a;
-  border: none;
-  border-radius: 50px;
-  padding: 7px 14px;
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
+.nav-logo { font-family: var(--font); font-size: 1.35rem; font-weight: 800; color: var(--text); cursor: pointer; letter-spacing: -0.03em; transition: opacity 0.2s var(--ease); }
+.nav-logo:hover { opacity: 0.8; }
+.nav-logo span { background: var(--neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+#navAuth { display: flex; gap: 6px; }
+#navUser { display: none; align-items: center; gap: 8px; }
+.nav-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.3s var(--spring); border: 2px solid transparent; }
+.nav-av:hover { border-color: var(--accent); transform: scale(1.05); }
+.btn-n { border: none; border-radius: 50px; padding: 7px 15px; font-family: var(--font); font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.3s var(--ease); letter-spacing: 0.01em; }
+.btn-n.ghost { background: var(--s2); color: var(--text); border: 1px solid var(--border2); }
+.btn-n.ghost:hover { background: var(--s3); border-color: var(--border2); }
+.btn-n.pub { background: var(--accent); color: white; box-shadow: 0 0 16px var(--accent-glow); }
+.btn-n.pub:hover { transform: translateY(-1px); box-shadow: 0 0 24px var(--accent-glow); }
 
-/* CLASES DE CONTROL DINÁMICO POR ROL */
-.seller-only {
-  display: none !important;
-}
+/* ── SELLER ONLY ── */
+.seller-only { display: none !important; }
 
-/* MAIN */
-.main {
-  height: 100vh;
-  padding-top: 56px;
-  overflow: hidden;
-}
-.view {
-  height: 100%;
-  display: none;
-}
-#view-feed {
-  display: block;
-}
+/* ── MAIN ── */
+.main { height: 100dvh; padding-top: 52px; padding-bottom: 56px; overflow: hidden; }
+.view { height: 100%; display: none; }
+#view-feed { display: block; overflow: hidden; padding: 0; }
 
-/* FEED */
+/* ══════════════════════════════════
+   FEED — TIKTOK STYLE
+══════════════════════════════════ */
 .feed-container {
-  height: 100%;
-  overflow-y: scroll;
+  height: 100%; overflow-y: scroll;
   scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
-.feed-container::-webkit-scrollbar {
-  display: none;
-}
+.feed-container::-webkit-scrollbar { display: none; }
+
 .feed-card {
-  height: 100%;
-  scroll-snap-align: start;
-  position: relative;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  height: 100dvh; scroll-snap-align: start;
+  position: relative; background: #000; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
 }
+
 .feed-media {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.4s var(--ease);
 }
-.feed-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%, rgba(0,0,0,0.3) 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1rem;
+.feed-card:hover .feed-media { transform: scale(1.01); }
+
+/* Gradient layers */
+.feed-grad-top {
+  position: absolute; top: 0; left: 0; right: 0; height: 180px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 100%);
+  pointer-events: none; z-index: 1;
 }
-.feed-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 0.5rem;
+.feed-grad-bot {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 340px;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+  pointer-events: none; z-index: 1;
 }
-.feed-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font);
-  font-size: 1rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  border: 2px solid white;
+
+/* Brand row — top left */
+.feed-top-row {
+  position: absolute; top: 0; left: 0; right: 60px;
+  padding: 1rem; z-index: 2; display: flex; align-items: center; gap: 10px;
 }
-.feed-brand-name {
-  font-family: var(--font);
-  font-size: 0.9rem;
-  font-weight: 700;
+.feed-av {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-size: 1rem; font-weight: 700; color: white;
+  border: 2px solid rgba(255,255,255,0.4); cursor: pointer;
+  transition: all 0.3s var(--spring);
 }
-.feed-brand-city {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.6);
+.feed-av:hover { transform: scale(1.08); border-color: white; }
+.feed-bname { font-family: var(--font); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.feed-bname:hover { opacity: 0.8; }
+.feed-bcity { font-size: 0.68rem; color: rgba(255,255,255,0.55); margin-top: 1px; }
+.feed-weblink {
+  margin-left: auto; background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2);
+  color: white; border-radius: 50px; padding: 5px 11px;
+  font-size: 0.7rem; text-decoration: none; font-family: var(--font);
+  font-weight: 600; flex-shrink: 0; transition: all 0.3s var(--ease);
 }
-.feed-web-btn {
-  margin-left: auto;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  border-radius: 50px;
-  padding: 5px 12px;
-  font-size: 0.75rem;
-  text-decoration: none;
-  font-family: var(--font);
-  font-weight: 600;
+.feed-weblink:hover { background: rgba(255,255,255,0.2); }
+
+/* Right action bar — TikTok style */
+.feed-actions {
+  position: absolute; right: 10px; bottom: 100px;
+  z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 18px;
 }
+.feed-action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  transition: transform 0.3s var(--spring);
+}
+.feed-action-btn:hover { transform: scale(1.1); }
+.feed-action-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s var(--ease);
+}
+.feed-action-icon:hover { background: rgba(255,255,255,0.18); }
+.feed-action-icon.liked { background: rgba(255,87,34,0.3); border-color: var(--accent); }
+.feed-action-icon svg { width: 20px; height: 20px; }
+.feed-action-count { font-size: 0.65rem; font-family: var(--font); font-weight: 600; color: rgba(255,255,255,0.8); }
+.feed-wa-action .feed-action-icon { background: rgba(37,211,102,0.2); border-color: rgba(37,211,102,0.4); }
+.feed-wa-action .feed-action-icon:hover { background: rgba(37,211,102,0.35); }
+
+/* Product info — bottom left */
 .feed-info {
-  margin-top: auto;
+  position: absolute; bottom: 0; left: 0; right: 70px;
+  padding: 1rem; z-index: 2;
 }
-.feed-product-name {
-  font-family: var(--font);
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.feed-price {
-  font-family: var(--font);
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--accent2);
-  margin-bottom: 8px;
-}
-.feed-colors {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-.color-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid white;
-  flex-shrink: 0;
-}
-.feed-sizes {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-.size-tag {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.3);
-  color: white;
-  border-radius: 6px;
-  padding: 3px 10px;
-  font-size: 0.75rem;
-  font-family: var(--font);
-  font-weight: 600;
-}
-.feed-desc {
-  font-size: 0.83rem;
-  color: rgba(255,255,255,0.75);
-  margin-bottom: 12px;
-  line-height: 1.4;
-}
-.feed-whatsapp {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #25d366;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 11px 22px;
-  font-family: var(--font);
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  transition: opacity 0.2s;
-}
-.feed-whatsapp:hover {
-  opacity: 0.9;
-}
+.feed-pname { font-family: var(--font); font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; line-height: 1.2; }
+.feed-price { font-family: var(--font); font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; background: var(--neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.feed-variants { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; align-items: center; }
+.feed-cdot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; }
+.feed-stag { background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; font-family: var(--font); font-weight: 600; }
+.feed-desc { font-size: 0.8rem; color: rgba(255,255,255,0.7); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* EXPLORE */
-#view-explore {
-  overflow-y: auto;
-  padding: 1rem;
+/* ══════════════════════════════════
+   EXPLORE
+══════════════════════════════════ */
+#view-explore { overflow-y: auto; padding: 1rem; }
+#view-explore::-webkit-scrollbar { display: none; }
+.exheader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.extitle { font-family: var(--font); font-size: 1.2rem; font-weight: 700; }
+.btn-add { background: var(--accent); color: white; border: none; border-radius: 50px; padding: 8px 15px; font-family: var(--font); font-size: 0.76rem; font-weight: 700; cursor: pointer; transition: all 0.3s var(--spring); box-shadow: 0 0 12px var(--accent-glow); }
+.btn-add:hover { transform: translateY(-1px); box-shadow: 0 0 20px var(--accent-glow); }
+.explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; }
+.excard {
+  background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2);
+  overflow: hidden; cursor: pointer;
+  transition: all 0.3s var(--ease);
 }
-.explore-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.2rem;
-}
-.explore-title {
-  font-family: var(--font);
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-.btn-add-brand {
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 8px 16px;
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-.explore-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
-}
-.explore-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  transition: transform 0.2s;
-}
-.explore-card:hover {
-  transform: translateY(-3px);
-}
-.explore-cover {
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-.explore-body {
-  padding: 1rem;
-}
-.explore-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 8px;
-  margin-top: -28px;
-  border: 3px solid var(--surface);
-}
-.explore-name {
-  font-family: var(--font);
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 2px;
-}
-.explore-cat {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-.explore-desc {
-  font-size: 0.82rem;
-  color: rgba(245,240,232,0.6);
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-.explore-web {
-  display: inline-block;
-  font-size: 0.8rem;
-  color: var(--accent2);
-  text-decoration: none;
-}
+.excard:hover { transform: translateY(-4px); border-color: var(--border2); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
+.excover { height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
+.exbody { padding: 0.75rem; }
+.exav-wrap { position: relative; display: inline-block; margin-top: -24px; margin-bottom: 6px; }
+.exav { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: 1rem; font-weight: 700; color: white; border: 3px solid var(--bg); }
+.exv { position: absolute; bottom: -3px; right: -3px; background: #3b82f6; color: white; border-radius: 50%; width: 15px; height: 15px; font-size: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
+.exname { font-family: var(--font); font-size: 0.88rem; font-weight: 700; margin-bottom: 2px; }
+.excat { font-size: 0.7rem; color: var(--muted); margin-bottom: 5px; }
+.exstats { display: flex; gap: 8px; font-size: 0.68rem; color: var(--muted); }
+.exstats b { color: var(--text); }
 
-/* LOGIN VIEW */
-#view-login {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
+/* ══════════════════════════════════
+   BRAND PROFILE — INSTAGRAM STYLE
+══════════════════════════════════ */
+#view-brand { overflow-y: auto; padding: 0; }
+#view-brand::-webkit-scrollbar { display: none; }
+.bp-back {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font); font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; border: none; color: var(--text); width: 100%;
+  transition: background 0.2s;
 }
-.auth-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 2rem;
-  width: 100%;
-  max-width: 380px;
-  margin: 1rem;
-}
-.auth-logo {
-  font-family: var(--font);
-  font-size: 1.8rem;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 0.3rem;
-}
-.auth-logo span {
-  color: var(--accent);
-}
-.auth-sub {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-bottom: 1.5rem;
-}
-.auth-tabs {
-  display: flex;
-  background: var(--surface2);
-  border-radius: 50px;
-  padding: 3px;
-  margin-bottom: 1.5rem;
-}
-.auth-tab {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-family: var(--font);
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 7px;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.auth-tab.active {
-  background: var(--surface);
-  color: var(--text);
-}
-.btn-google {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: white;
-  color: #333;
-  border: none;
-  border-radius: 50px;
-  padding: 11px;
-  font-family: var(--font);
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 1rem;
-  transition: opacity 0.2s;
-}
-.btn-google:hover {
-  opacity: 0.9;
-}
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1rem;
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-.divider::before, .divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
+.bp-back:hover { background: rgba(20,20,20,0.9); }
+.bp-cover { height: 150px; display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; overflow: hidden; }
+.bp-cover-blur { position: absolute; inset: 0; filter: blur(20px) saturate(1.5); transform: scale(1.2); }
+.bp-cover-emoji { position: relative; z-index: 1; font-size: 4rem; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
+.bp-meta { padding: 0 1rem 1rem; }
+.bp-av-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: -28px; margin-bottom: 10px; }
+.bp-av-wrap { position: relative; }
+.bp-av { width: 76px; height: 76px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: 2rem; font-weight: 700; color: white; border: 4px solid var(--bg); box-shadow: 0 0 0 1px var(--border2); }
+.bp-vbadge { position: absolute; bottom: 2px; right: 2px; background: #3b82f6; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
+.bp-wa-btn { display: inline-flex; align-items: center; gap: 6px; background: #25d366; color: white; border: none; border-radius: 8px; padding: 9px 16px; font-family: var(--font); font-size: 0.8rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: all 0.3s var(--spring); }
+.bp-wa-btn:hover { transform: translateY(-1px); }
+.bp-name { font-family: var(--font); font-size: 1.15rem; font-weight: 700; }
+.bp-handle { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+.bp-stats { display: flex; gap: 0; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 10px; }
+.bp-stat { flex: 1; padding: 10px 8px; text-align: center; border-right: 1px solid var(--border); }
+.bp-stat:last-child { border-right: none; }
+.bp-stat-n { font-family: var(--font); font-size: 1rem; font-weight: 700; }
+.bp-stat-l { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+.bp-bio { font-size: 0.84rem; line-height: 1.55; color: rgba(248,244,239,0.8); margin-bottom: 8px; }
+.bp-weblink { font-size: 0.82rem; color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 12px; }
+.bp-weblink:hover { text-decoration: underline; }
+.bp-divider { height: 1px; background: var(--border); }
+.bp-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.bp-tab { flex: 1; padding: 10px; background: none; border: none; color: var(--muted); font-family: var(--font); font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; }
+.bp-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.bp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.bp-tile { aspect-ratio: 1; position: relative; overflow: hidden; cursor: pointer; background: var(--s2); }
+.bp-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s var(--ease); }
+.bp-tile:hover img { transform: scale(1.06); }
+.bp-tile-over { position: absolute; inset: 0; background: rgba(0,0,0,0); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: background 0.3s; }
+.bp-tile:hover .bp-tile-over { background: rgba(0,0,0,0.5); }
+.bp-tile-name { font-family: var(--font); font-size: 0.72rem; font-weight: 700; text-align: center; padding: 0 4px; opacity: 0; transition: opacity 0.3s; }
+.bp-tile-price { font-size: 0.68rem; background: var(--neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; opacity: 0; transition: opacity 0.3s; }
+.bp-tile:hover .bp-tile-name, .bp-tile:hover .bp-tile-price { opacity: 1; }
+.bp-empty { grid-column: span 3; text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 0.85rem; }
 
-/* INTERFAZ SELECCIÓN DE ROLES */
-.role-selector {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 1.2rem;
-}
-.role-btn {
-  flex: 1;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  color: var(--muted);
-  border-radius: 10px;
-  padding: 12px 8px;
-  font-family: var(--font);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s ease;
-}
-.role-btn.selected {
-  border-color: var(--accent);
-  background: rgba(232, 67, 26, 0.05);
-  color: var(--text);
-}
-.role-btn span {
-  font-size: 1.2rem;
-}
+/* ══════════════════════════════════
+   LOGIN
+══════════════════════════════════ */
+#view-login { display: flex; align-items: center; justify-content: center; overflow-y: auto; }
+.auth-box { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2); padding: 1.8rem; width: 100%; max-width: 360px; margin: 1rem; }
+.auth-logo { font-family: var(--font); font-size: 1.7rem; font-weight: 800; text-align: center; margin-bottom: 0.2rem; }
+.auth-logo span { background: var(--neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.auth-sub { text-align: center; color: var(--muted); font-size: 0.82rem; margin-bottom: 1.2rem; }
+.role-selector { display: flex; gap: 8px; margin-bottom: 1.2rem; }
+.role-btn { flex: 1; background: var(--s2); border: 1.5px solid var(--border); color: var(--muted); border-radius: 12px; padding: 12px 8px; font-family: var(--font); font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.3s var(--ease); }
+.role-btn span { font-size: 1.2rem; }
+.role-btn.selected { border-color: var(--accent); background: rgba(255,87,34,0.08); color: var(--text); box-shadow: 0 0 12px var(--accent-glow); }
+.btn-google { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: white; color: #1a1a1a; border: none; border-radius: 50px; padding: 11px; font-family: var(--font); font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-bottom: 1rem; transition: all 0.3s var(--ease); }
+.btn-google:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+.divider { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; color: var(--muted); font-size: 0.75rem; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.auth-tabs { display: flex; background: var(--s2); border-radius: 50px; padding: 3px; margin-bottom: 1.2rem; }
+.auth-tab { flex: 1; background: none; border: none; color: var(--muted); font-family: var(--font); font-size: 0.8rem; font-weight: 600; padding: 7px; border-radius: 50px; cursor: pointer; transition: all 0.3s var(--ease); }
+.auth-tab.active { background: var(--s1); color: var(--text); }
 
-/* PROFILE VIEW */
-#view-profile {
-  overflow-y: auto;
-  padding: 1rem;
-}
-.profile-header {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-.profile-av {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font);
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 0 auto 0.8rem;
-}
-.profile-name {
-  font-family: var(--font);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-.profile-email {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-.btn-logout {
-  background: var(--surface2);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 50px;
-  padding: 7px 16px;
-  font-family: var(--font);
-  font-size: 0.8rem;
-  cursor: pointer;
-  margin-top: 1rem;
-}
+/* ══════════════════════════════════
+   PROFILE VIEW
+══════════════════════════════════ */
+#view-profile { overflow-y: auto; }
+#view-profile::-webkit-scrollbar { display: none; }
+.mp-cover { height: 110px; background: linear-gradient(135deg, #1a0a00, #2d1200, #0d0d0d); }
+.mp-body { padding: 0 1rem 2rem; }
+.mp-av-wrap { margin-top: -30px; margin-bottom: 8px; }
+.mp-av { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: 1.6rem; font-weight: 700; color: white; border: 4px solid var(--bg); }
+.mp-name { font-family: var(--font); font-size: 1.05rem; font-weight: 700; }
+.mp-email { font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem; }
+.mp-btns { display: flex; gap: 8px; margin-bottom: 1.2rem; }
+.mp-btn { flex: 1; padding: 9px; border-radius: 10px; font-family: var(--font); font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.3s var(--ease); border: none; }
+.mp-btn.primary { background: var(--accent); color: white; box-shadow: 0 0 12px var(--accent-glow); }
+.mp-btn.primary:hover { box-shadow: 0 0 20px var(--accent-glow); }
+.mp-btn.ghost { background: var(--s2); color: var(--text); border: 1px solid var(--border); }
+.mp-stats { display: flex; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 1.2rem; }
+.mp-stat { flex: 1; padding: 10px; text-align: center; border-right: 1px solid var(--border); }
+.mp-stat:last-child { border-right: none; }
+.mp-stat-n { font-family: var(--font); font-size: 1rem; font-weight: 700; }
+.mp-stat-l { font-size: 0.68rem; color: var(--muted); }
+.mp-empty { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.84rem; border: 1px dashed var(--border); border-radius: var(--r); margin-bottom: 1rem; line-height: 1.8; }
+.mp-logout { width: 100%; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 50px; padding: 9px; font-family: var(--font); font-size: 0.8rem; cursor: pointer; transition: all 0.3s var(--ease); margin-top: 1rem; }
+.mp-logout:hover { border-color: var(--accent); color: var(--accent); }
 
-/* FORMS */
-.form-group {
-  margin-bottom: 0.9rem;
+/* ══════════════════════════════════
+   FORMS
+══════════════════════════════════ */
+.fg { margin-bottom: 0.85rem; }
+.fl { font-size: 0.7rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; display: block; letter-spacing: 0.07em; text-transform: uppercase; }
+.fi, .fsel, .fta {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: var(--body); font-size: 0.87rem;
+  background: var(--s2); color: var(--text); outline: none;
+  transition: all 0.3s var(--ease);
 }
-.form-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--muted);
-  margin-bottom: 5px;
-  display: block;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.fi:focus, .fsel:focus, .fta:focus { border-color: var(--accent); background: var(--s3); box-shadow: 0 0 0 3px var(--accent-glow); }
+.fsel option { background: var(--s2); }
+.fta { resize: vertical; min-height: 65px; }
+.btn-sub {
+  width: 100%; background: var(--accent); color: white; border: none;
+  border-radius: 50px; padding: 13px; font-family: var(--font);
+  font-size: 0.9rem; font-weight: 700; cursor: pointer; margin-top: 0.3rem;
+  transition: all 0.3s var(--ease); box-shadow: 0 0 16px var(--accent-glow);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.form-input, .form-select, .form-textarea {
-  width: 100%;
-  padding: 10px 13px;
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  font-family: var(--body);
-  font-size: 0.88rem;
-  background: var(--surface2);
-  color: var(--text);
-  outline: none;
-  transition: border-color 0.2s;
-}
-.form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--accent);
-}
-.form-select option {
-  background: var(--surface2);
-}
-.form-textarea {
-  resize: vertical;
-  min-height: 70px;
-}
-.btn-submit {
-  width: 100%;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 13px;
-  font-family: var(--font);
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 0.5rem;
-  transition: opacity 0.2s;
-}
-.btn-submit:hover {
-  opacity: 0.9;
-}
-.btn-submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.btn-sub:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 24px var(--accent-glow); }
+.btn-sub:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* COLORS PICKER */
-.colors-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+/* ══════════════════════════════════
+   COLOR & SIZE PICKERS
+══════════════════════════════════ */
+.colors-grid { display: flex; flex-wrap: wrap; gap: 9px; }
 .color-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  cursor: pointer;
-  transition: border-color 0.2s;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 3px solid transparent; cursor: pointer;
+  transition: all 0.3s var(--spring); position: relative;
 }
-.color-btn.selected {
-  border-color: white;
+.color-btn::after {
+  content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white; opacity: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8); transition: opacity 0.2s;
 }
-.sizes-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.color-btn.selected { border-color: white; transform: scale(1.15); box-shadow: 0 0 0 2px var(--accent); }
+.color-btn.selected::after { opacity: 1; }
+.sizes-grid { display: flex; flex-wrap: wrap; gap: 6px; }
 .size-btn {
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  color: var(--muted);
-  border-radius: 8px;
-  padding: 5px 12px;
-  font-family: var(--font);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  background: var(--s2); border: 1.5px solid var(--border); color: var(--muted);
+  border-radius: 8px; padding: 6px 13px; font-family: var(--font);
+  font-size: 0.76rem; font-weight: 600; cursor: pointer;
+  transition: all 0.3s var(--spring);
 }
-.size-btn.selected {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
+.size-btn:hover { border-color: var(--border2); color: var(--text); }
+.size-btn.selected { background: var(--accent); border-color: var(--accent); color: white; transform: scale(1.06); box-shadow: 0 0 10px var(--accent-glow); }
 
-/* MODAL */
+/* ══════════════════════════════════
+   MODAL — BOTTOM SHEET
+══════════════════════════════════ */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  z-index: 200;
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-  backdrop-filter: blur(4px);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200;
+  display: none; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(8px);
 }
-@media(min-width: 600px) {
-  .modal-overlay { align-items: center; }
-}
+@media(min-width: 600px) { .modal-overlay { align-items: center; } }
 .modal {
-  background: var(--surface);
-  border-radius: var(--radius) var(--radius) 0 0;
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 480px;
-  max-height: 88vh;
-  overflow-y: auto;
-  position: relative;
+  background: var(--s1); border-radius: 22px 22px 0 0;
+  padding: 1.2rem 1.2rem 2rem; width: 100%; max-width: 480px;
+  max-height: 92dvh; overflow-y: auto; position: relative;
+  transform: translateY(100%); transition: transform 0.4s var(--ease);
 }
-@media(min-width: 600px) {
-  .modal { border-radius: var(--radius); }
-}
-.modal-handle {
-  width: 40px;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: 0 auto 1.2rem;
-}
-.modal-title {
-  font-family: var(--font);
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 0.3rem;
-}
-.modal-sub {
-  font-size: 0.82rem;
-  color: var(--muted);
-  margin-bottom: 1.2rem;
-}
-.modal-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: var(--surface2);
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 1rem;
-}
+.modal-overlay.open .modal { transform: translateY(0); }
+@media(min-width: 600px) { .modal { border-radius: 22px; transform: scale(0.95); } .modal-overlay.open .modal { transform: scale(1); } }
+.modal::-webkit-scrollbar { display: none; }
+.modal-handle { width: 36px; height: 4px; background: var(--s4); border-radius: 2px; margin: 0 auto 1rem; }
+.modal-title { font-family: var(--font); font-size: 1.1rem; font-weight: 700; }
+.modal-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem; margin-top: 2px; }
+.mcl { position: absolute; top: 1.1rem; right: 1.1rem; background: var(--s2); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; color: var(--muted); font-size: 0.9rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.mcl:hover { background: var(--s3); color: var(--text); }
 
-/* MEDIA UPLOAD */
+/* Upload area */
 .upload-area {
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  margin-bottom: 0.5rem;
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 1.3rem; text-align: center; cursor: pointer; display: block;
+  transition: all 0.3s var(--ease); margin-bottom: 6px;
 }
-.upload-area:hover {
-  border-color: var(--accent);
-}
-.upload-icon {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-}
-.upload-text {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
+.upload-area:hover { border-color: var(--accent); background: rgba(255,87,34,0.04); }
+.upload-area.uploading { border-color: var(--accent2); background: rgba(255,171,64,0.06); cursor: not-allowed; }
+.upload-progress { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0.5rem 0; }
+.upload-progress-text { font-size: 0.78rem; color: var(--accent2); font-family: var(--font); font-weight: 600; }
 
-/* STATES */
-.loading {
-  text-align: center;
-  padding: 3rem;
-  color: var(--muted);
-  font-family: var(--font);
-}
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 2;
-}
-
-/* TOAST */
-.toast {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--surface2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  padding: 10px 22px;
-  border-radius: 50px;
-  font-size: 0.83rem;
-  font-family: var(--font);
-  font-weight: 600;
-  z-index: 300;
-  transition: all 0.3s;
-  opacity: 0;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* BOTTOM NAV MOBILE */
+/* ══════════════════════════════════
+   BOTTOM NAV
+══════════════════════════════════ */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(10,10,10,0.95);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  z-index: 100;
+  position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
+  background: rgba(0,0,0,0.94); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border); display: flex; z-index: 100;
 }
 .bottom-tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 10px 0;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-family: var(--font);
-  font-size: 0.65rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; background: none; border: none; color: var(--muted);
+  font-family: var(--font); font-size: 0.58rem; font-weight: 600; cursor: pointer;
+  transition: all 0.3s var(--ease); letter-spacing: 0.03em;
 }
-.bottom-tab.active, .bottom-tab:hover {
-  color: var(--text);
+.bottom-tab svg { width: 19px; height: 19px; transition: transform 0.3s var(--spring); }
+.bottom-tab.active { color: var(--text); }
+.bottom-tab.active svg { transform: scale(1.1); }
+.bottom-tab:hover svg { transform: scale(1.05); }
+.pub-tab-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+.pub-tab-btn { width: 46px; height: 46px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; box-shadow: 0 0 18px var(--accent-glow); transition: all 0.3s var(--spring); }
+.pub-tab-btn:hover { transform: scale(1.08); box-shadow: 0 0 26px var(--accent-glow); }
+.pub-tab-btn svg { width: 22px; height: 22px; }
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+.toast {
+  position: fixed; bottom: 68px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--s2); color: var(--text); border: 1px solid var(--border2);
+  padding: 10px 20px; border-radius: 50px; font-size: 0.8rem;
+  font-family: var(--font); font-weight: 600; z-index: 300;
+  transition: all 0.35s var(--ease); opacity: 0; pointer-events: none;
+  white-space: nowrap; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
 }
-.bottom-tab svg {
-  width: 20px;
-  height: 20px;
-}
-.bottom-tab.publish-tab {
-  color: var(--accent2);
-}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════
+   MISC
+══════════════════════════════════ */
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 0.86rem; line-height: 2; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: fadeUp 0.4s var(--ease) both; }
 </style>
 </head>
 <body>
 
 <nav>
   <span class="nav-logo" onclick="showView('feed')">lokk<span>al</span></span>
-  <div class="nav-tabs">
-    <button class="nav-tab active" data-view="feed" onclick="showView('feed')">Feed</button>
-    <button class="nav-tab" data-view="explore" onclick="showView('explore')">Marcas</button>
-  </div>
   <div class="nav-right">
     <div id="navAuth">
-      <button class="btn-nav ghost" onclick="showView('login')">Entrar</button>
+      <button class="btn-n ghost" onclick="showView('login')">Entrar</button>
     </div>
     <div id="navUser">
-      <button class="btn-publish seller-only" id="topPublishBtn" onclick="openPublish()">+ Publicar</button>
-      <div class="nav-avatar" id="navAvatar" onclick="showView('profile')">?</div>
+      <button class="btn-n pub seller-only" id="topPublishBtn" onclick="openPublish()">+ Publicar</button>
+      <div class="nav-av" id="navAvatar" onclick="showView('profile')">?</div>
     </div>
   </div>
 </nav>
 
 <div class="main">
-
+  <!-- FEED -->
   <div id="view-feed" class="view">
     <div class="feed-container" id="feedContainer">
-      <div class="loading">Cargando feed...</div>
+      <div class="loading-state"><div class="spinner"></div><span>Cargando feed...</span></div>
     </div>
   </div>
 
+  <!-- EXPLORE -->
   <div id="view-explore" class="view">
-    <div class="explore-header">
-      <div class="explore-title">Marcas</div>
-      <button class="btn-add-brand seller-only" id="exploreBrandBtn" onclick="openBrandModal()">+ Registrar marca</button>
+    <div class="exheader">
+      <div class="extitle">Marcas</div>
+      <button class="btn-add seller-only" id="exploreBrandBtn" onclick="openBrandModal()">+ Registrar marca</button>
     </div>
     <div class="explore-grid" id="exploreGrid">
-      <div class="loading">Cargando...</div>
+      <div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>
     </div>
   </div>
 
+  <!-- BRAND PROFILE -->
+  <div id="view-brand" class="view"></div>
+
+  <!-- LOGIN -->
   <div id="view-login" class="view">
     <div class="auth-box">
       <div class="auth-logo">lokk<span>al</span></div>
-      <div class="auth-sub">Entra para publicar y vender</div>
-      
-      <label class="form-label">Quiero usar Lokkal para:</label>
+      <div class="auth-sub">Descubre y vende marcas colombianas</div>
+      <label class="fl">Quiero usar Lokkal para:</label>
       <div class="role-selector">
         <button type="button" class="role-btn selected" id="role-buyer" onclick="selectRole('buyer')">
           <span>🛍️</span>Comprar
@@ -880,272 +468,210 @@ nav {
           <span>🏪</span>Tener una Marca
         </button>
       </div>
-
       <button class="btn-google" onclick="loginGoogle()">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
         Continuar con Google
       </button>
-      
       <div class="divider">o</div>
-      
       <div class="auth-tabs">
-        <button class="auth-tab active" onclick="showTab('login')">Iniciar sesión</button>
-        <button class="auth-tab" onclick="showTab('register')">Registrarse</button>
+        <button class="auth-tab active" onclick="showAuthTab('login')">Iniciar sesión</button>
+        <button class="auth-tab" onclick="showAuthTab('register')">Registrarse</button>
       </div>
-      
       <div id="panel-login">
-        <div class="form-group">
-          <label class="form-label">Correo</label>
-          <input class="form-input" type="email" id="loginEmail" placeholder="tu@email.com">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Contraseña</label>
-          <input class="form-input" type="password" id="loginPass" placeholder="••••••••">
-        </div>
-        <button class="btn-submit" onclick="loginEmail()">Iniciar sesión</button>
+        <div class="fg"><label class="fl">Correo</label><input class="fi" type="email" id="loginEmail" placeholder="tu@email.com"></div>
+        <div class="fg"><label class="fl">Contraseña</label><input class="fi" type="password" id="loginPass" placeholder="••••••••"></div>
+        <button class="btn-sub" onclick="loginEmail()">Iniciar sesión</button>
       </div>
-      
       <div id="panel-register" style="display:none">
-        <div class="form-group">
-          <label class="form-label">Correo electrónico</label>
-          <input class="form-input" type="email" id="regEmail" placeholder="tu@email.com">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Contraseña</label>
-          <input class="form-input" type="password" id="regPass" placeholder="mínimo 6 caracteres">
-        </div>
-        <button class="btn-submit" id="btnRegister" onclick="registerEmail()">Crear cuenta</button>
+        <div class="fg"><label class="fl">Correo</label><input class="fi" type="email" id="regEmail" placeholder="tu@email.com"></div>
+        <div class="fg"><label class="fl">Contraseña</label><input class="fi" type="password" id="regPass" placeholder="mínimo 6 caracteres"></div>
+        <button class="btn-sub" id="btnRegister" onclick="registerEmail()">Crear cuenta</button>
       </div>
     </div>
   </div>
 
+  <!-- PROFILE -->
   <div id="view-profile" class="view">
-    <div class="profile-header">
-      <div class="profile-av" id="profileAv">?</div>
-      <div class="profile-name" id="profileName">—</div>
-      <div class="profile-email" id="profileEmail">—</div>
-      <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    <div class="mp-cover"></div>
+    <div class="mp-body">
+      <div class="mp-av-wrap"><div class="mp-av" id="profileAv">?</div></div>
+      <div class="mp-name" id="profileName">—</div>
+      <div class="mp-email" id="profileEmail">—</div>
+      <div class="mp-btns seller-only">
+        <button class="mp-btn primary" onclick="openPublish()">+ Publicar producto</button>
+        <button class="mp-btn ghost" onclick="openBrandModal()">Registrar marca</button>
+      </div>
+      <div class="mp-stats">
+        <div class="mp-stat"><div class="mp-stat-n">0</div><div class="mp-stat-l">Productos</div></div>
+        <div class="mp-stat"><div class="mp-stat-n">0</div><div class="mp-stat-l">Seguidores</div></div>
+        <div class="mp-stat"><div class="mp-stat-n">0</div><div class="mp-stat-l">Ventas</div></div>
+      </div>
+      <div class="mp-empty">📦 Aún no has publicado productos</div>
+      <button class="mp-logout" onclick="logout()">Cerrar sesión</button>
     </div>
   </div>
-
 </div>
 
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <button class="bottom-tab active" onclick="showView('feed')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-    Feed
+  <button class="bottom-tab active" id="tab-feed" onclick="showView('feed')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Inicio
   </button>
-  <button class="bottom-tab" onclick="showView('explore')">
+  <button class="bottom-tab" id="tab-explore" onclick="showView('explore')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     Marcas
   </button>
-  <button class="bottom-tab publish-tab seller-only" id="bottomPublishBtn" onclick="openPublish()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Publicar
-  </button>
-  <button class="bottom-tab" onclick="showView('profile')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  <div class="pub-tab-wrap seller-only" id="bottomPublishBtn">
+    <button class="pub-tab-btn" onclick="openPublish()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <button class="bottom-tab" id="tab-profile" onclick="showView('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     Perfil
   </button>
 </div>
 
+<!-- MODAL PUBLICAR -->
 <div class="modal-overlay" id="modalPublish">
   <div class="modal">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closePublish()">✕</button>
-    <div class="modal-title">Publicar producto</div>
-    <div class="modal-sub">Foto o video de tu producto</div>
+    <button class="mcl" onclick="closePublish()">✕</button>
+    <div class="modal-title">Nuevo producto</div>
+    <div class="modal-sub">Foto o video · Contacto por WhatsApp</div>
     <form id="publishForm">
-      <div class="form-group">
-        <label class="upload-area" for="prodMedia">
-          <div class="upload-icon">📸</div>
-          <div class="upload-text">Toca para subir foto o video</div>
+      <div class="fg">
+        <label class="upload-area" for="prodMedia" id="uploadLabel">
+          <div style="font-size:1.8rem;margin-bottom:4px">📸</div>
+          <div style="font-size:0.78rem;color:var(--muted)">Toca para subir foto o video</div>
         </label>
         <input type="file" id="prodMedia" accept="image/*,video/*" style="display:none" onchange="previewMedia(this)">
         <div id="mediaPreview"></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Nombre del producto *</label>
-        <input class="form-input" type="text" id="prodName" placeholder="Ej: Body Floral Negro">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Precio (COP) *</label>
-        <input class="form-input" type="number" id="prodPrice" placeholder="85000">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Nombre de tu marca *</label>
-        <input class="form-input" type="text" id="prodBrand" placeholder="Ej: JASY Boutique">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Ciudad</label>
-        <input class="form-input" type="text" id="prodCity" placeholder="Barranquilla">
-      </div>
-      <div class="form-group">
-        <label class="form-label">WhatsApp de contacto *</label>
-        <input class="form-input" type="tel" id="prodWhatsapp" placeholder="+57 300 000 0000">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Página web (si tienes)</label>
-        <input class="form-input" type="url" id="prodBrandUrl" placeholder="https://tumarca.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Colores disponibles</label>
+      <div class="fg"><label class="fl">Nombre del producto *</label><input class="fi" type="text" id="prodName" placeholder="Ej: Body Floral Negro"></div>
+      <div class="fg"><label class="fl">Precio (COP) *</label><input class="fi" type="number" id="prodPrice" placeholder="85000"></div>
+      <div class="fg"><label class="fl">Nombre de tu marca *</label><input class="fi" type="text" id="prodBrand" placeholder="Ej: JASY Boutique"></div>
+      <div class="fg"><label class="fl">Ciudad</label><input class="fi" type="text" id="prodCity" placeholder="Barranquilla"></div>
+      <div class="fg"><label class="fl">WhatsApp de contacto *</label><input class="fi" type="tel" id="prodWhatsapp" placeholder="+57 300 000 0000"></div>
+      <div class="fg"><label class="fl">Página web (si tienes)</label><input class="fi" type="url" id="prodBrandUrl" placeholder="https://tumarca.com"></div>
+      <div class="fg">
+        <label class="fl">Colores disponibles</label>
         <div class="colors-grid" id="colorsGrid">
-          <div class="color-btn" style="background:#000000" onclick="toggleColor('#000000', this)"></div>
-          <div class="color-btn" style="background:#ffffff" onclick="toggleColor('#ffffff', this)"></div>
-          <div class="color-btn" style="background:#e8431a" onclick="toggleColor('#e8431a', this)"></div>
-          <div class="color-btn" style="background:#f2a649" onclick="toggleColor('#f2a649', this)"></div>
-          <div class="color-btn" style="background:#2d6a4f" onclick="toggleColor('#2d6a4f', this)"></div>
-          <div class="color-btn" style="background:#185fa5" onclick="toggleColor('#185fa5', this)"></div>
-          <div class="color-btn" style="background:#6b2fa0" onclick="toggleColor('#6b2fa0', this)"></div>
-          <div class="color-btn" style="background:#ff9eb5" onclick="toggleColor('#ff9eb5', this)"></div>
+          <div class="color-btn" style="background:#000000" onclick="toggleColor('#000000',this)"></div>
+          <div class="color-btn" style="background:#ffffff;border:2px solid #333" onclick="toggleColor('#ffffff',this)"></div>
+          <div class="color-btn" style="background:#ff5722" onclick="toggleColor('#ff5722',this)"></div>
+          <div class="color-btn" style="background:#ffab40" onclick="toggleColor('#ffab40',this)"></div>
+          <div class="color-btn" style="background:#2d6a4f" onclick="toggleColor('#2d6a4f',this)"></div>
+          <div class="color-btn" style="background:#185fa5" onclick="toggleColor('#185fa5',this)"></div>
+          <div class="color-btn" style="background:#6b2fa0" onclick="toggleColor('#6b2fa0',this)"></div>
+          <div class="color-btn" style="background:#ff9eb5" onclick="toggleColor('#ff9eb5',this)"></div>
+          <div class="color-btn" style="background:#c8506a" onclick="toggleColor('#c8506a',this)"></div>
+          <div class="color-btn" style="background:#7b4f2e" onclick="toggleColor('#7b4f2e',this)"></div>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Tallas disponibles</label>
+      <div class="fg">
+        <label class="fl">Tallas disponibles</label>
         <div class="sizes-grid">
-          <button type="button" class="size-btn" onclick="toggleSize('XS', this)">XS</button>
-          <button type="button" class="size-btn" onclick="toggleSize('S', this)">S</button>
-          <button type="button" class="size-btn" onclick="toggleSize('M', this)">M</button>
-          <button type="button" class="size-btn" onclick="toggleSize('L', this)">L</button>
-          <button type="button" class="size-btn" onclick="toggleSize('XL', this)">XL</button>
-          <button type="button" class="size-btn" onclick="toggleSize('Único', this)">Único</button>
+          <button type="button" class="size-btn" onclick="toggleSize('XS',this)">XS</button>
+          <button type="button" class="size-btn" onclick="toggleSize('S',this)">S</button>
+          <button type="button" class="size-btn" onclick="toggleSize('M',this)">M</button>
+          <button type="button" class="size-btn" onclick="toggleSize('L',this)">L</button>
+          <button type="button" class="size-btn" onclick="toggleSize('XL',this)">XL</button>
+          <button type="button" class="size-btn" onclick="toggleSize('XXL',this)">XXL</button>
+          <button type="button" class="size-btn" onclick="toggleSize('Único',this)">Único</button>
+          <button type="button" class="size-btn" onclick="toggleSize('35',this)">35</button>
+          <button type="button" class="size-btn" onclick="toggleSize('36',this)">36</button>
+          <button type="button" class="size-btn" onclick="toggleSize('37',this)">37</button>
+          <button type="button" class="size-btn" onclick="toggleSize('38',this)">38</button>
+          <button type="button" class="size-btn" onclick="toggleSize('39',this)">39</button>
+          <button type="button" class="size-btn" onclick="toggleSize('40',this)">40</button>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Descripción</label>
-        <textarea class="form-textarea" id="prodDesc" placeholder="Describe tu producto..."></textarea>
-      </div>
-      <button type="button" class="btn-submit" id="btnPublish" onclick="submitProduct()">Publicar producto 🚀</button>
+      <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="prodDesc" placeholder="Describe tu producto..."></textarea></div>
+      <button type="button" class="btn-sub" id="btnPublish" onclick="submitProduct()">Publicar producto 🚀</button>
     </form>
   </div>
 </div>
 
+<!-- MODAL MARCA -->
 <div class="modal-overlay" id="modalBrand">
   <div class="modal">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeBrandModal()">✕</button>
+    <button class="mcl" onclick="closeBrandModal()">✕</button>
     <div class="modal-title">Registrar marca</div>
-    <div class="modal-sub">Gratis para siempre</div>
-    <div class="form-group">
-      <label class="form-label">Nombre de la marca *</label>
-      <input class="form-input" type="text" id="brandName" placeholder="Mi Marca CO">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Categoría</label>
-      <select class="form-select" id="brandCat">
-        <option>Moda y ropa</option>
-        <option>Comida y bebidas</option>
-        <option>Belleza y cuidado</option>
-        <option>Tecnología</option>
-        <option>Arte y diseño</option>
-        <option>Hogar</option>
-        <option>Deportes</option>
-        <option>Otro</option>
+    <div class="modal-sub">Gratis para siempre · Sin comisiones</div>
+    <div class="fg"><label class="fl">Nombre de la marca *</label><input class="fi" type="text" id="brandName" placeholder="Mi Marca CO"></div>
+    <div class="fg"><label class="fl">Categoría</label>
+      <select class="fsel" id="brandCat">
+        <option>Moda y ropa</option><option>Comida y bebidas</option><option>Belleza y cuidado</option>
+        <option>Tecnología</option><option>Arte y diseño</option><option>Hogar</option><option>Deportes</option><option>Otro</option>
       </select>
     </div>
-    <div class="form-group">
-      <label class="form-label">Ciudad *</label>
-      <input class="form-input" type="text" id="brandCity" placeholder="Barranquilla">
-    </div>
-    <div class="form-group">
-      <label class="form-label">WhatsApp *</label>
-      <input class="form-input" type="tel" id="brandWhatsapp" placeholder="+57 300 000 0000">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Página web (si tienes)</label>
-      <input class="form-input" type="url" id="brandWebsite" placeholder="https://tumarca.com">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Descripción</label>
-      <textarea class="form-textarea" id="brandDesc" placeholder="Cuéntanos sobre tu marca..."></textarea>
-    </div>
-    <button type="button" class="btn-submit" onclick="submitBrand()">Registrar marca gratis 🚀</button>
+    <div class="fg"><label class="fl">Ciudad *</label><input class="fi" type="text" id="brandCity" placeholder="Barranquilla"></div>
+    <div class="fg"><label class="fl">WhatsApp *</label><input class="fi" type="tel" id="brandWhatsapp" placeholder="+57 300 000 0000"></div>
+    <div class="fg"><label class="fl">Página web (si tienes)</label><input class="fi" type="url" id="brandWebsite" placeholder="https://tumarca.com"></div>
+    <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="brandDesc" placeholder="Cuéntanos sobre tu marca..."></textarea></div>
+    <button type="button" class="btn-sub" onclick="submitBrand()">Registrar marca gratis 🚀</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, serverTimestamp, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// Configuración de Firebase
+// ── FIREBASE CONFIG ──
 const firebaseConfig = {
   apiKey: "AIzaSyB6SWo8awRffc0NHH1Dn7iM8NCHaMgSTbk",
   authDomain: "lokkal-a04e2.firebaseapp.com",
   projectId: "lokkal-a04e2",
   storageBucket: "lokkal-a04e2.firebasestorage.app",
   messagingSenderId: "338965902047",
-  appId: "1:338965902047:web:8e162f48f47cbe92f25b29",
-  measurementId: "G-6EXS23SXZT"
+  appId: "1:338965902047:web:8e162f48f47cbe92f25b29"
 };
+const CLOUD_NAME = "dxacndwfh";
+const UPLOAD_PRESET = "lokkal_unsigned";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Variables de Estado Globales
+// ── STATE ──
 window._currentUser = null;
 let selectedRole = "buyer";
 let selectedColors = [];
 let selectedSizes = [];
 let currentUploadedMediaUrl = "";
+let currentMediaType = "image";
+let likedProducts = new Set(JSON.parse(localStorage.getItem('lokkal_likes') || '[]'));
 
-// --- NAVEGACIÓN DE LA INTERFAZ ---
-window.showView = function(viewId) {
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+window.showToast = showToast;
+
+// ── VIEW ROUTER ──
+window.showView = function(view) {
   document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-  const targetView = document.getElementById(`view-${viewId}`);
-  if (targetView) targetView.style.display = viewId === 'login' ? 'flex' : 'block';
-
-  document.querySelectorAll('.nav-tab, .bottom-tab').forEach(tab => {
-    if (tab.getAttribute('data-view') === viewId || tab.getAttribute('onclick')?.includes(`'${viewId}'`)) {
-      tab.classList.add('active');
-    } else {
-      tab.classList.remove('active');
-    }
-  });
-
-  if (viewId === 'feed') loadFeed();
-  if (viewId === 'explore') loadBrands();
-  if (viewId === 'profile') loadProfile();
+  const el = document.getElementById('view-' + view);
+  if (el) { el.style.display = 'block'; el.classList.add('animate-in'); }
+  document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+  const tab = document.getElementById('tab-' + view);
+  if (tab) tab.classList.add('active');
+  if (view === 'feed') loadFeed();
+  if (view === 'explore') loadBrands();
+  if (view === 'profile') loadProfile();
 };
 
-window.showTab = function(tabType) {
-  const panelLogin = document.getElementById('panel-login');
-  const panelRegister = document.getElementById('panel-register');
-  const tabs = document.querySelectorAll('.auth-tab');
-
-  if (tabType === 'login') {
-    panelLogin.style.display = 'block';
-    panelRegister.style.display = 'none';
-    tabs[0].classList.add('active');
-    tabs[1].classList.remove('active');
-  } else {
-    panelLogin.style.display = 'none';
-    panelRegister.style.display = 'block';
-    tabs[0].classList.remove('active');
-    tabs[1].classList.add('active');
-  }
-};
-
-// --- CONTROL DINÁMICO DE ROLES ---
-window.selectRole = function(role) {
-  selectedRole = role;
-  const btnBuyer = document.getElementById('role-buyer');
-  const btnSeller = document.getElementById('role-seller');
-
-  if (role === 'buyer') {
-    btnBuyer.classList.add('selected');
-    btnSeller.classList.remove('selected');
-  } else {
-    btnSeller.classList.add('selected');
-    btnBuyer.classList.remove('selected');
-  }
-};
-
-// --- ESCUCHADOR DE ESTADO DE AUTENTICACIÓN (ONAUTHSTATECHANGED) + CONTROL UX ---
+// ── AUTH STATE ──
 onAuthStateChanged(auth, async (user) => {
+  window._currentUser = user;
   const navAuth = document.getElementById('navAuth');
   const navUser = document.getElementById('navUser');
   const topPublishBtn = document.getElementById('topPublishBtn');
@@ -1153,269 +679,354 @@ onAuthStateChanged(auth, async (user) => {
   const exploreBrandBtn = document.getElementById('exploreBrandBtn');
 
   if (user) {
-    window._currentUser = user;
     navAuth.style.display = 'none';
     navUser.style.display = 'flex';
-    const initial = user.email ? user.email[0].toUpperCase() : '?';
-    document.getElementById('navAvatar').textContent = initial;
-
+    document.getElementById('navAvatar').textContent = (user.displayName || user.email)[0].toUpperCase();
     try {
-      // Consulta en tiempo real del rol almacenado en Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        if (userData.role === 'seller') {
-          // Mostrar elementos exclusivos para marcas/vendedores
-          if (topPublishBtn) topPublishBtn.style.display = 'block';
-          if (bottomPublishBtn) bottomPublishBtn.style.display = 'flex';
-          if (exploreBrandBtn) exploreBrandBtn.style.display = 'block';
-        } else {
-          // Ocultar elementos si es comprador (buyer)
-          if (topPublishBtn) topPublishBtn.style.display = 'none';
-          if (bottomPublishBtn) bottomPublishBtn.style.display = 'none';
-          if (exploreBrandBtn) exploreBrandBtn.style.display = 'none';
-        }
-      } else {
-        // En caso de que el documento no exista aún en base de datos
-        if (topPublishBtn) topPublishBtn.style.display = 'none';
-        if (bottomPublishBtn) bottomPublishBtn.style.display = 'none';
-        if (exploreBrandBtn) exploreBrandBtn.style.display = 'none';
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists() && snap.data().role === 'seller') {
+        document.querySelectorAll('.seller-only').forEach(el => el.style.removeProperty('display'));
       }
-    } catch (error) {
-      console.error("Error al recuperar el rol del usuario de Firestore:", error);
-    }
+    } catch(e) {}
   } else {
     window._currentUser = null;
     navAuth.style.display = 'flex';
     navUser.style.display = 'none';
-    
-    // Ocultar herramientas de publicación por defecto sin sesión activa
-    if (topPublishBtn) topPublishBtn.style.display = 'none';
-    if (bottomPublishBtn) bottomPublishBtn.style.display = 'none';
-    if (exploreBrandBtn) exploreBrandBtn.style.display = 'none';
   }
 });
 
-// --- AUTENTICACIÓN Y FLUJO UNIFICADO DE ROLES ---
-window.registerEmail = async function() {
-  const email = document.getElementById('regEmail').value.trim();
-  const pass = document.getElementById('regPass').value.trim();
-  const btn = document.getElementById('btnRegister');
-
-  if (!email || !pass) {
-    showToast("Por favor completa todos los campos");
-    return;
+// ── LOAD FEED ──
+async function loadFeed() {
+  const container = document.getElementById('feedContainer');
+  container.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Cargando feed...</span></div>`;
+  try {
+    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      container.innerHTML = `<div class="empty-state">🛍️<br>Aún no hay productos publicados.<br>¡Sé el primero!</div>`;
+      return;
+    }
+    let products = [];
+    snapshot.forEach(d => products.push({ id: d.id, ...d.data() }));
+    // Shuffle for variety
+    products = products.sort(() => Math.random() - 0.5);
+    container.innerHTML = '';
+    products.forEach(p => container.appendChild(createFeedCard(p)));
+  } catch(err) {
+    container.innerHTML = `<div class="empty-state">Error al cargar el feed.<br><small>${err.message}</small></div>`;
   }
-  if (pass.length < 6) {
-    showToast("La contraseña debe tener mínimo 6 caracteres");
-    return;
-  }
+}
 
-  btn.disabled = true;
-  btn.textContent = "Creando cuenta...";
+function createFeedCard(p) {
+  const card = document.createElement('div');
+  card.className = 'feed-card';
+  const isVideo = p.mediaUrl && (p.mediaUrl.includes('/video/') || p.mediaUrl.endsWith('.mp4') || p.mediaUrl.endsWith('.mov'));
+  const media = isVideo
+    ? `<video class="feed-media" src="${p.mediaUrl}" loop muted playsinline></video>`
+    : `<img class="feed-media" src="${p.mediaUrl||''}" alt="${p.name}" loading="lazy" onerror="this.style.background='#111'">`;
+
+  const waMsg = encodeURIComponent(`¡Hola! Vi *${p.name}* en Lokkal y me interesa. ¿Podés darme más info? 🛍️`);
+  const waUrl = `https://wa.me/${(p.whatsapp||'').replace(/\D/g,'')}?text=${waMsg}`;
+  const isLiked = likedProducts.has(p.id);
+  const brandInitial = (p.brandName||'?')[0].toUpperCase();
+
+  card.innerHTML = `
+    ${media}
+    <div class="feed-grad-top"></div>
+    <div class="feed-grad-bot"></div>
+    <div class="feed-top-row">
+      <div class="feed-av" style="background:${p.brandColor||'#ff5722'}" onclick="openBrandProfile('${p.brandName||''}')">
+        ${brandInitial}
+      </div>
+      <div>
+        <div class="feed-bname" onclick="openBrandProfile('${p.brandName||''}')">${p.brandName||'Marca'}</div>
+        <div class="feed-bcity">📍 ${p.city||'Colombia'}</div>
+      </div>
+      ${p.website ? `<a href="${p.website}" target="_blank" class="feed-weblink" onclick="event.stopPropagation()">🌐 Web</a>` : ''}
+    </div>
+    <div class="feed-actions">
+      <button class="feed-action-btn" onclick="toggleLike('${p.id}', this)">
+        <div class="feed-action-icon ${isLiked?'liked':''}">
+          <svg viewBox="0 0 24 24" fill="${isLiked?'#ff5722':'none'}" stroke="${isLiked?'#ff5722':'white'}" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+        </div>
+        <span class="feed-action-count">${p.likes||0}</span>
+      </button>
+      <button class="feed-action-btn" onclick="shareProduct('${p.id}','${encodeURIComponent(p.name)}')">
+        <div class="feed-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </div>
+        <span class="feed-action-count">Comp.</span>
+      </button>
+      <a href="${waUrl}" target="_blank" class="feed-action-btn feed-wa-action" style="text-decoration:none">
+        <div class="feed-action-icon">
+          <svg viewBox="0 0 24 24" fill="#25d366" width="20" height="20">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.113 1.527 5.842L.057 23.999l6.306-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.795 9.795 0 01-4.988-1.365l-.358-.213-3.712.974.991-3.618-.234-.372A9.78 9.78 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/>
+          </svg>
+        </div>
+        <span class="feed-action-count">Pedir</span>
+      </a>
+    </div>
+    <div class="feed-info">
+      <div class="feed-pname">${p.name}</div>
+      <div class="feed-price">$${Number(p.price||0).toLocaleString('es-CO')} COP</div>
+      ${(p.colors?.length||p.sizes?.length) ? `
+      <div class="feed-variants">
+        ${(p.colors||[]).map(c=>`<span class="feed-cdot" style="background:${c}"></span>`).join('')}
+        ${(p.sizes||[]).map(s=>`<span class="feed-stag">${s}</span>`).join('')}
+      </div>` : ''}
+      <div class="feed-desc">${p.description||''}</div>
+    </div>
+  `;
+
+  if (isVideo) {
+    const vid = card.querySelector('video');
+    new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) vid.play().catch(()=>{}); else vid.pause(); });
+    }, { threshold: 0.6 }).observe(card);
+  }
+  return card;
+}
+
+window.toggleLike = function(id, btn) {
+  const icon = btn.querySelector('.feed-action-icon');
+  const svg = btn.querySelector('svg');
+  const count = btn.querySelector('.feed-action-count');
+  if (likedProducts.has(id)) {
+    likedProducts.delete(id);
+    icon.classList.remove('liked');
+    svg.setAttribute('fill','none'); svg.setAttribute('stroke','white');
+    count.textContent = Math.max(0, parseInt(count.textContent)-1);
+  } else {
+    likedProducts.add(id);
+    icon.classList.add('liked');
+    svg.setAttribute('fill','#ff5722'); svg.setAttribute('stroke','#ff5722');
+    count.textContent = parseInt(count.textContent)+1;
+    btn.style.transform = 'scale(1.3)';
+    setTimeout(() => btn.style.transform = '', 300);
+  }
+  localStorage.setItem('lokkal_likes', JSON.stringify([...likedProducts]));
+};
+
+window.shareProduct = function(id, name) {
+  const url = window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: decodeURIComponent(name), text: `Mira esto en Lokkal`, url });
+  } else {
+    navigator.clipboard?.writeText(url).then(() => showToast('🔗 Enlace copiado'));
+  }
+};
+
+// ── BRAND PROFILE ──
+window.openBrandProfile = async function(brandName) {
+  const view = document.getElementById('view-brand');
+  view.innerHTML = `<div class="loading-state" style="height:100%"><div class="spinner"></div></div>`;
+  document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+  view.style.display = 'block';
 
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    const user = userCredential.user;
+    // Get brand data
+    const bSnap = await getDocs(query(collection(db, 'brands'), where('name', '==', brandName)));
+    let brand = null;
+    bSnap.forEach(d => { if (!brand) brand = { id: d.id, ...d.data() }; });
 
-    // Persistir rol dinámico seleccionado en Firestore
-    await setDoc(doc(db, "users", user.uid), {
-      email: user.email,
-      role: selectedRole,
-      createdAt: serverTimestamp()
+    // Get brand products
+    const pSnap = await getDocs(query(collection(db, 'products'), where('brandName', '==', brandName)));
+    const products = [];
+    pSnap.forEach(d => products.push({ id: d.id, ...d.data() }));
+
+    const colors = ['#ff5722','#ffab40','#185fa5','#6b2fa0','#2d6a4f','#c8506a'];
+    const brandColor = brand?.color || colors[Math.floor(Math.random()*colors.length)];
+    const emoji = brand?.emoji || '🏪';
+    const waMsg = encodeURIComponent(`Hola ${brandName}! Vi tu perfil en Lokkal y me interesa 👋`);
+    const waUrl = brand?.whatsapp ? `https://wa.me/${brand.whatsapp.replace(/\D/g,'')}?text=${waMsg}` : '#';
+
+    view.innerHTML = `
+      <button class="bp-back" onclick="showView('explore')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Volver a Marcas
+      </button>
+      <div class="bp-cover" style="background:linear-gradient(135deg,${brandColor}22,${brandColor}55,#000)">
+        <div class="bp-cover-blur" style="background:${brandColor};opacity:0.3"></div>
+        <div class="bp-cover-emoji">${emoji}</div>
+      </div>
+      <div class="bp-meta">
+        <div class="bp-av-row">
+          <div class="bp-av-wrap">
+            <div class="bp-av" style="background:${brandColor}">${brandName[0].toUpperCase()}</div>
+            ${brand?.verified ? '<div class="bp-vbadge">✓</div>' : ''}
+          </div>
+          ${brand?.whatsapp ? `<a href="${waUrl}" target="_blank" class="bp-wa-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.113 1.527 5.842L.057 23.999l6.306-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.795 9.795 0 01-4.988-1.365l-.358-.213-3.712.974.991-3.618-.234-.372A9.78 9.78 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+            Contactar
+          </a>` : ''}
+        </div>
+        <div class="bp-name">${brandName}</div>
+        <div class="bp-handle">@${brandName.toLowerCase().replace(/\s+/g,'')}</div>
+        <div class="bp-stats">
+          <div class="bp-stat"><div class="bp-stat-n">${products.length}</div><div class="bp-stat-l">productos</div></div>
+          <div class="bp-stat"><div class="bp-stat-n">${brand?.followers||'—'}</div><div class="bp-stat-l">seguidores</div></div>
+          <div class="bp-stat"><div class="bp-stat-n">${brand?.city||'COL'}</div><div class="bp-stat-l">ciudad</div></div>
+        </div>
+        ${brand?.description ? `<div class="bp-bio">${brand.description}</div>` : ''}
+        ${brand?.website ? `<a href="${brand.website}" target="_blank" class="bp-weblink">🌐 ${brand.website.replace('https://','')}</a>` : ''}
+      </div>
+      <div class="bp-divider"></div>
+      <div class="bp-tabs">
+        <button class="bp-tab active">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Productos
+        </button>
+      </div>
+      <div class="bp-grid">
+        ${products.length ? products.map(p => {
+          const isV = p.mediaUrl && p.mediaUrl.includes('/video/');
+          return `<div class="bp-tile" onclick="scrollToProduct('${p.name}')">
+            ${isV
+              ? `<video src="${p.mediaUrl}" muted loop style="width:100%;height:100%;object-fit:cover"></video>`
+              : `<img src="${p.mediaUrl||''}" alt="${p.name}" loading="lazy" onerror="this.style.background='#1a1a1a'">`
+            }
+            <div class="bp-tile-over">
+              <div class="bp-tile-name">${p.name}</div>
+              <div class="bp-tile-price">$${Number(p.price||0).toLocaleString('es-CO')}</div>
+            </div>
+          </div>`;
+        }).join('') : '<div class="bp-empty">📦 Sin productos aún</div>'}
+      </div>
+    `;
+  } catch(err) {
+    view.innerHTML = `<button class="bp-back" onclick="showView('explore')">← Volver</button><div class="empty-state">Error al cargar perfil<br><small>${err.message}</small></div>`;
+  }
+};
+
+window.scrollToProduct = function(name) {
+  showView('feed');
+  showToast(`🔍 Buscando "${name}" en el feed...`);
+};
+
+// ── LOAD BRANDS ──
+async function loadBrands() {
+  const grid = document.getElementById('exploreGrid');
+  grid.innerHTML = `<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>`;
+  try {
+    const q = query(collection(db, "brands"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">🏪<br>Aún no hay marcas registradas.<br>¡Sé el primero!</div>`;
+      return;
+    }
+    const brandColors = ['#ff5722','#ffab40','#185fa5','#6b2fa0','#2d6a4f','#c8506a','#7b4f2e'];
+    grid.innerHTML = '';
+    snap.forEach(d => {
+      const b = d.data();
+      const color = b.color || brandColors[Math.floor(Math.random()*brandColors.length)];
+      const card = document.createElement('div');
+      card.className = 'excard animate-in';
+      card.onclick = () => openBrandProfile(b.name);
+      card.innerHTML = `
+        <div class="excover" style="background:linear-gradient(135deg,${color}33,${color}66)">${b.emoji||'🏪'}</div>
+        <div class="exbody">
+          <div class="exav-wrap">
+            <div class="exav" style="background:${color}">${b.name[0].toUpperCase()}</div>
+            ${b.verified?'<div class="exv">✓</div>':''}
+          </div>
+          <div class="exname">${b.name}</div>
+          <div class="excat">${b.category||'General'} · ${b.city||'Colombia'}</div>
+        </div>
+      `;
+      grid.appendChild(card);
     });
-
-    showToast("¡Cuenta creada con éxito!");
-    
-    if (selectedRole === 'seller') {
-      window.showView('explore');
-      window.openBrandModal();
-    } else {
-      window.showView('feed');
-    }
-  } catch (error) {
-    console.error(error);
-    showToast("Error al registrarse: " + error.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Crear cuenta";
+  } catch(err) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">Error al cargar marcas.<br><small>${err.message}</small></div>`;
   }
-};
+}
 
-window.loginEmail = async function() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-
-  if (!email || !pass) {
-    showToast("Ingresa correo y contraseña");
-    return;
-  }
-
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    showToast("¡Bienvenido de nuevo!");
-    window.showView('feed');
-  } catch (error) {
-    console.error(error);
-    showToast("Credenciales incorrectas");
-  }
-};
-
-window.loginGoogle = async function() {
-  const provider = new GoogleAuthProvider();
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    // Verificar si el usuario ya tiene un rol guardado previamente para no sobreescribirlo
-    const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-
-    let roleToAssign = selectedRole;
-
-    if (userDocSnap.exists()) {
-      roleToAssign = userDocSnap.data().role || selectedRole;
-      await setDoc(userDocRef, { email: user.email }, { merge: true });
-    } else {
-      // Registrar por primera vez respetando el rol activo en la interfaz
-      await setDoc(userDocRef, {
-        email: user.email,
-        role: roleToAssign,
-        createdAt: serverTimestamp()
-      });
-    }
-
-    showToast("Sesión iniciada con Google");
-
-    if (roleToAssign === 'seller') {
-      window.showView('explore');
-      window.openBrandModal();
-    } else {
-      window.showView('feed');
-    }
-  } catch (error) {
-    console.error(error);
-    showToast("Error en login con Google");
-  }
-};
-
-window.logout = async function() {
-  try {
-    await signOut(auth);
-    showToast("Sesión cerrada");
-    window.showView('feed');
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-// --- PERFIL DE USUARIO ---
+// ── PROFILE ──
 function loadProfile() {
-  if (!window._currentUser) return;
+  if (!window._currentUser) { showView('login'); return; }
   const u = window._currentUser;
-  const initial = u.email ? u.email[0].toUpperCase() : '?';
-  document.getElementById('profileAv').textContent = initial;
+  document.getElementById('profileAv').textContent = (u.displayName||u.email)[0].toUpperCase();
   document.getElementById('profileName').textContent = u.displayName || 'Usuario de Lokkal';
   document.getElementById('profileEmail').textContent = u.email;
 }
 
-// --- INTERACCIONES DE FORMULARIOS Y ATRIBUTOS ---
+// ── PUBLISH ──
 window.openPublish = function() {
-  if (!window._currentUser) {
-    showToast("Inicia sesión para publicar");
-    window.showView('login');
-    return;
-  }
-  document.getElementById('modalPublish').style.display = 'flex';
+  if (!window._currentUser) { showToast('Inicia sesión para publicar'); showView('login'); return; }
+  const overlay = document.getElementById('modalPublish');
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => overlay.classList.add('open'));
 };
-
 window.closePublish = function() {
-  document.getElementById('modalPublish').style.display = 'none';
+  const overlay = document.getElementById('modalPublish');
+  overlay.classList.remove('open');
+  setTimeout(() => { overlay.style.display = 'none'; }, 400);
   document.getElementById('publishForm').reset();
-  document.getElementById('mediaPreview').innerHTML = "";
-  selectedColors = [];
-  selectedSizes = [];
-  currentUploadedMediaUrl = "";
-  document.querySelectorAll('.color-btn, .size-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('mediaPreview').innerHTML = '';
+  document.getElementById('uploadLabel').classList.remove('uploading');
+  document.getElementById('uploadLabel').innerHTML = '<div style="font-size:1.8rem;margin-bottom:4px">📸</div><div style="font-size:0.78rem;color:var(--muted)">Toca para subir foto o video</div>';
+  selectedColors = []; selectedSizes = [];
+  currentUploadedMediaUrl = '';
+  document.querySelectorAll('.color-btn.selected,.size-btn.selected').forEach(el => el.classList.remove('selected'));
 };
 
 window.openBrandModal = function() {
-  if (!window._currentUser) {
-    showToast("Inicia sesión primero");
-    window.showView('login');
-    return;
-  }
-  document.getElementById('modalBrand').style.display = 'flex';
+  if (!window._currentUser) { showToast('Inicia sesión primero'); showView('login'); return; }
+  const overlay = document.getElementById('modalBrand');
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => overlay.classList.add('open'));
 };
-
 window.closeBrandModal = function() {
-  document.getElementById('modalBrand').style.display = 'none';
+  const overlay = document.getElementById('modalBrand');
+  overlay.classList.remove('open');
+  setTimeout(() => { overlay.style.display = 'none'; }, 400);
 };
 
-window.toggleColor = function(color, element) {
-  const index = selectedColors.indexOf(color);
-  if (index > -1) {
-    selectedColors.splice(index, 1);
-    element.classList.remove('selected');
-  } else {
-    selectedColors.push(color);
-    element.classList.add('selected');
-  }
-};
-
-window.toggleSize = function(size, element) {
-  const index = selectedSizes.indexOf(size);
-  if (index > -1) {
-    selectedSizes.splice(index, 1);
-    element.classList.remove('selected');
-  } else {
-    selectedSizes.push(size);
-    element.classList.add('selected');
-  }
-};
-
-// --- PROCESAMIENTO MULTIMEDIA (CLOUDINARY) ---
+// ── MEDIA UPLOAD ──
 window.previewMedia = async function(input) {
   const file = input.files[0];
   if (!file) return;
-
-  const previewContainer = document.getElementById('mediaPreview');
-  previewContainer.innerHTML = `<div class="loading" style="padding:1rem;">Procesando archivo...</div>`;
-
-  const cloudName = "lokkal"; 
-  const uploadPreset = "ml_default"; 
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-
+  const btn = document.getElementById('btnPublish');
+  const label = document.getElementById('uploadLabel');
+  const preview = document.getElementById('mediaPreview');
+  btn.disabled = true;
+  label.classList.add('uploading');
+  label.innerHTML = `<div class="upload-progress"><div class="spinner"></div><div class="upload-progress-text">Procesando archivo...</div></div>`;
+  currentUploadedMediaUrl = '';
+  currentMediaType = file.type.startsWith('video') ? 'video' : 'image';
   try {
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-      method: "POST",
-      body: formData
-    });
+    const form = new FormData();
+    form.append('file', file);
+    form.append('upload_preset', UPLOAD_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${currentMediaType}/upload`, { method: 'POST', body: form });
     const data = await res.json();
-    
     if (data.secure_url) {
       currentUploadedMediaUrl = data.secure_url;
-      if (file.type.startsWith('video/')) {
-        previewContainer.innerHTML = `<video src="${currentUploadedMediaUrl}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px;" autoplay muted loop></video>`;
+      label.classList.remove('uploading');
+      label.innerHTML = '<div style="font-size:1rem;color:var(--accent2);font-weight:600">✓ Archivo listo</div>';
+      if (currentMediaType === 'video') {
+        preview.innerHTML = `<video src="${data.secure_url}" controls muted style="width:100%;max-height:180px;border-radius:10px;margin-top:8px;object-fit:cover"></video>`;
       } else {
-        previewContainer.innerHTML = `<img src="${currentUploadedMediaUrl}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px;">`;
+        preview.innerHTML = `<img src="${data.secure_url}" style="width:100%;max-height:180px;border-radius:10px;margin-top:8px;object-fit:cover">`;
       }
-      showToast("Multimedia procesada correctamente");
-    } else {
-      throw new Error("Error en respuesta de almacenamiento remoto");
-    }
-  } catch (err) {
-    console.error(err);
-    previewContainer.innerHTML = `<div style="color:red; font-size:0.8rem; padding:0.5rem;">Error al procesar archivo técnico</div>`;
+      btn.disabled = false;
+      showToast('✅ Multimedia lista');
+    } else throw new Error(data.error?.message || 'Error de Cloudinary');
+  } catch(err) {
+    label.classList.remove('uploading');
+    label.innerHTML = '<div style="font-size:1.8rem;margin-bottom:4px">📸</div><div style="font-size:0.78rem;color:var(--muted)">Toca para subir foto o video</div>';
+    preview.innerHTML = `<div style="color:#ff5722;font-size:0.78rem;padding:0.5rem">❌ ${err.message}</div>`;
+    btn.disabled = false;
+    showToast('Error al subir archivo');
   }
 };
 
-// --- PERSISTENCIA EN CLOUD FIRESTORE ---
+// ── SUBMIT PRODUCT ──
 window.submitProduct = async function() {
   const name = document.getElementById('prodName').value.trim();
   const price = document.getElementById('prodPrice').value.trim();
@@ -1425,43 +1036,33 @@ window.submitProduct = async function() {
   const url = document.getElementById('prodBrandUrl').value.trim();
   const desc = document.getElementById('prodDesc').value.trim();
   const btn = document.getElementById('btnPublish');
-
   if (!name || !price || !brand || !whatsapp || !currentUploadedMediaUrl) {
-    showToast("Por favor completa los campos obligatorios y sube un archivo");
+    showToast('⚠️ Completa todos los campos y sube un archivo');
     return;
   }
-
   btn.disabled = true;
-  btn.textContent = "Publicando... 🚀";
-
+  btn.innerHTML = '<div class="spinner"></div> Publicando...';
   try {
     await addDoc(collection(db, "products"), {
-      name,
-      price: Number(price),
-      brandName: brand,
-      city: city || "Colombia",
-      whatsapp,
-      website: url || "",
-      colors: selectedColors,
-      sizes: selectedSizes,
-      description: desc,
-      mediaUrl: currentUploadedMediaUrl,
-      userId: window._currentUser.uid,
+      name, price: Number(price), brandName: brand,
+      city: city || "Colombia", whatsapp, website: url || "",
+      colors: selectedColors, sizes: selectedSizes, description: desc,
+      mediaUrl: currentUploadedMediaUrl, mediaType: currentMediaType,
+      userId: window._currentUser.uid, likes: 0,
       createdAt: serverTimestamp()
     });
-
-    showToast("¡Producto publicado exitosamente!");
+    showToast('🎉 ¡Producto publicado!');
     window.closePublish();
-    loadFeed();
-  } catch (error) {
-    console.error(error);
-    showToast("Error al guardar producto");
+    loadFeed(); showView('feed');
+  } catch(err) {
+    showToast('Error: ' + err.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = "Publicar producto 🚀";
+    btn.innerHTML = 'Publicar producto 🚀';
   }
 };
 
+// ── SUBMIT BRAND ──
 window.submitBrand = async function() {
   const name = document.getElementById('brandName').value.trim();
   const cat = document.getElementById('brandCat').value;
@@ -1469,153 +1070,96 @@ window.submitBrand = async function() {
   const whatsapp = document.getElementById('brandWhatsapp').value.trim();
   const web = document.getElementById('brandWebsite').value.trim();
   const desc = document.getElementById('brandDesc').value.trim();
-
-  if (!name || !city || !whatsapp) {
-    showToast("Completa los campos obligatorios");
-    return;
-  }
-
+  if (!name || !city || !whatsapp) { showToast('⚠️ Completa los campos obligatorios'); return; }
   try {
     await addDoc(collection(db, "brands"), {
-      name,
-      category: cat,
-      city,
-      whatsapp,
-      website: web || "",
-      description: desc,
-      userId: window._currentUser.uid,
+      name, category: cat, city, whatsapp, website: web || "",
+      description: desc, userId: window._currentUser.uid,
       createdAt: serverTimestamp()
     });
-
-    showToast("¡Marca registrada con éxito!");
+    showToast('🎉 ¡Marca registrada!');
     window.closeBrandModal();
-    if (document.getElementById('view-explore').style.display === 'block') {
-      loadBrands();
-    }
-  } catch (error) {
-    console.error(error);
-    showToast("Error al guardar marca");
-  }
+    loadBrands(); showView('explore');
+  } catch(err) { showToast('Error: ' + err.message); }
 };
 
-// --- RENDERIZADO ASÍNCRONO DE CONTENIDO ---
-async function loadFeed() {
-  const container = document.getElementById('feedContainer');
-  container.innerHTML = `<div class="loading">Cargando feed...</div>`;
-
+// ── AUTH ──
+window.selectRole = function(role) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('role-' + role).classList.add('selected');
+};
+window.showAuthTab = function(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('panel-register').style.display = tab === 'register' ? 'block' : 'none';
+};
+// Keep old name for compatibility
+window.showTab = window.showAuthTab;
+window.toggleColor = function(c, el) {
+  if (selectedColors.includes(c)) { selectedColors = selectedColors.filter(x=>x!==c); el.classList.remove('selected'); }
+  else { selectedColors.push(c); el.classList.add('selected'); }
+};
+window.toggleSize = function(s, el) {
+  if (selectedSizes.includes(s)) { selectedSizes = selectedSizes.filter(x=>x!==s); el.classList.remove('selected'); }
+  else { selectedSizes.push(s); el.classList.add('selected'); }
+};
+window.loginGoogle = async function() {
+  const p = new GoogleAuthProvider();
   try {
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      container.innerHTML = `<div class="empty-state">No hay productos publicados todavía.</div>`;
-      return;
-    }
-
-    container.innerHTML = "";
-    snapshot.forEach(docSnap => {
-      const p = docSnap.data();
-      const card = document.createElement('div');
-      card.className = 'feed-card';
-
-      const isVideo = p.mediaUrl.includes('/video/upload/') || p.mediaUrl.endsWith('.mp4') || p.mediaUrl.endsWith('.mov');
-      const mediaElement = isVideo 
-        ? `<video class="feed-media" src="${p.mediaUrl}" autoplay muted loop playsinline></video>`
-        : `<img class="feed-media" src="${p.mediaUrl}" alt="${p.name}">`;
-
-      const waMessage = encodeURIComponent(`¡Hola! Vi tu producto "${p.name}" en Lokkal y me interesa obtener más información.`);
-      const waUrl = `https://wa.me/${p.whatsapp.replace(/[^0-9]/g, '')}?text=${waMessage}`;
-
-      card.innerHTML = `
-        ${mediaElement}
-        <div class="feed-overlay">
-          <div class="feed-brand">
-            <div class="feed-avatar">${p.brandName[0].toUpperCase()}</div>
-            <div>
-              <div class="feed-brand-name">${p.brandName}</div>
-              <div class="feed-brand-city">📍 ${p.city}</div>
-            </div>
-            ${p.website ? `<a href="${p.website}" target="_blank" class="feed-web-btn">Web</a>` : ''}
-          </div>
-          <div class="feed-info">
-            <h2 class="feed-product-name">${p.name}</h2>
-            <div class="feed-price">$${p.price.toLocaleString('co')} COP</div>
-            <div class="feed-colors">
-              ${p.colors ? p.colors.map(c => `<div class="color-dot" style="background:${c}"></div>`).join('') : ''}
-            </div>
-            <div class="feed-sizes">
-              ${p.sizes ? p.sizes.map(s => `<span class="size-tag">${s}</span>`).join('') : ''}
-            </div>
-            <p class="feed-desc">${p.description || ''}</p>
-            <a href="${waUrl}" target="_blank" class="feed-whatsapp">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.324 5.328 0 11.859 0c3.166.001 6.141 1.233 8.375 3.469 2.235 2.236 3.466 5.211 3.466 8.377-.003 6.534-5.328 11.858-11.86 11.858-2.004-.001-3.973-.508-5.729-1.476L0 24zm6.59-4.846c1.657.983 3.413 1.5 5.22 1.51 5.434 0 9.852-4.417 9.855-9.855.002-2.634-1.022-5.11-2.884-6.973C16.92 1.975 14.442 1.95 11.86 1.95c-5.438 0-9.854 4.419-9.857 9.857-.001 1.838.5 3.626 1.452 5.216l-.994 3.634 3.72-.976zm10.59-6.307c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.174.2-.298.3-.497.099-.198.05-.371-.025-.521-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/></svg>
-              Pedir por WhatsApp
-            </a>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  } catch (error) {
-    console.error(error);
-    container.innerHTML = `<div class="empty-state">Error al cargar el feed.</div>`;
-  }
-}
-
-async function loadBrands() {
-  const grid = document.getElementById('exploreGrid');
-  grid.innerHTML = `<div class="loading">Cargando marcas...</div>`;
-
+    const result = await signInWithPopup(auth, p);
+    const user = result.user;
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+    let role = selectedRole;
+    if (snap.exists()) { role = snap.data().role || selectedRole; await setDoc(ref, { email: user.email }, { merge: true }); }
+    else { await setDoc(ref, { email: user.email, role, createdAt: serverTimestamp() }); }
+    showToast('👋 ¡Bienvenido!');
+    if (role === 'seller') { showView('explore'); window.openBrandModal(); }
+    else showView('feed');
+  } catch(err) { showToast('Error con Google'); }
+};
+window.loginEmail = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  if (!email || !pass) { showToast('Ingresa correo y contraseña'); return; }
+  try { await signInWithEmailAndPassword(auth, email, pass); showToast('👋 ¡Bienvenido!'); showView('feed'); }
+  catch(err) { showToast('Credenciales incorrectas'); }
+};
+window.registerEmail = async function() {
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value.trim();
+  const btn = document.getElementById('btnRegister');
+  if (!email || !pass || pass.length < 6) { showToast('Revisa los datos ingresados'); return; }
+  btn.disabled = true; btn.textContent = 'Creando cuenta...';
   try {
-    const q = query(collection(db, "brands"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, "users", cred.user.uid), { email, role: selectedRole, createdAt: serverTimestamp() });
+    showToast('🎉 ¡Cuenta creada!');
+    if (selectedRole === 'seller') { showView('explore'); window.openBrandModal(); }
+    else showView('feed');
+  } catch(err) { showToast('Error: ' + err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Crear cuenta'; }
+};
+window.logout = async function() {
+  await signOut(auth);
+  showToast('Sesión cerrada');
+  showView('feed');
+};
 
-    if (snapshot.empty) {
-      grid.innerHTML = `<div class="empty-state">No hay marcas registradas todavía.</div>`;
-      return;
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) {
+      overlay.classList.remove('open');
+      setTimeout(() => { overlay.style.display = 'none'; }, 400);
     }
+  });
+});
 
-    grid.innerHTML = "";
-    snapshot.forEach(docSnap => {
-      const b = docSnap.data();
-      const card = document.createElement('div');
-      card.className = 'explore-card';
-      const colors = ['#e8431a', '#f2a649', '#185fa5', '#6b2fa0', '#2d6a4f'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-      card.innerHTML = `
-        <div class="explore-cover" style="background:linear-gradient(45deg, var(--surface2), #000)">🛍️ Lokkal Brand</div>
-        <div class="explore-body">
-          <div class="explore-avatar" style="background:${randomColor}">${b.name[0].toUpperCase()}</div>
-          <div class="explore-name">${b.name}</div>
-          <div class="explore-cat">${b.category} • 📍 ${b.city}</div>
-          <p class="explore-desc">${b.description || 'Sin descripción disponible.'}</p>
-          ${b.website ? `<a class="explore-web" href="${b.website}" target="_blank">Visitar sitio web →</a>` : ''}
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-  } catch (error) {
-    console.error(error);
-    grid.innerHTML = `<div class="empty-state">Error al cargar marcas comerciales.</div>`;
-  }
-}
-
-// --- UTILIDADES ---
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  if (toast) {
-    toast.textContent = message;
-    toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
-  }
-}
-
-// Ejecución Inicial Obligatoria
+// Init
 showView('feed');
 </script>
-
 </body>
-</html>s
+</html>
