@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── HELPER FUNCTIONS ──
+    function isAuth() { return request.auth != null; }
+    function isOwner(uid) { return isAuth() && request.auth.uid == uid; }
+    function isSeller() {
+      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'seller';
+    }
+    function ownsMarca(marcaId) {
+      return isAuth() && get(/databases/$(database)/documents/marcas/$(marcaId)).data.ownerId == request.auth.uid;
+    }
+
+    // ── USERS ──
+    match /users/{uid} {
+      allow read: if isAuth();
+      allow create: if isOwner(uid);
+      // Only owner can update, and cannot change their own uid or role to anything invalid
+      allow update: if isOwner(uid) && request.resource.data.uid == uid;
+      allow delete: if false;
+    }
+
+    // ── MARCAS (Brand Profiles) ──
+    // Model: { slug, name, ownerId, bio, logoUrl, bannerUrl, ... }
+    match /marcas/{marcaId} {
+      allow read: if true; // Public profiles
+      allow create: if isSeller() && request.resource.data.ownerId == request.auth.uid;
+      // Only brand owner can update
+      allow update: if isAuth() && resource.data.ownerId == request.auth.uid
+        // Prevent changing ownerId
+        && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if isAuth() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // ── PRODUCTOS ──
+    match /productos/{productoId} {
+      allow read: if true;
+      // Seller creates; marcaId must match a marca they own
+      allow create: if isSeller() && ownsMarca(request.resource.data.marcaId)
+        // Prevent spoofing brand fields
+        && request.resource.data.keys().hasAll(['title', 'price', 'marcaId', 'marcaName', 'marcaWhatsapp'])
+        && request.resource.data.likesCount == 0
+        && request.resource.data.viewsCount == 0;
+      // Owner updates (price, stock, images) OR anyone can increment likes/views (counters only)
+      allow update: if
+        (ownsMarca(resource.data.marcaId)
+          && request.resource.data.marcaId == resource.data.marcaId  // no brand change
+          && request.resource.data.ownerId == resource.data.ownerId) ||
+        (isAuth() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount', 'viewsCount']));
+      allow delete: if isAuth() && ownsMarca(resource.data.marcaId);
+    }
+
+    // ── RESEÑAS ──
+    match /resenas/{resenaId} {
+      allow read: if true;
+      allow create: if isAuth()
+        && request.resource.data.usuarioId == request.auth.uid
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow update: if isAuth() && resource.data.usuarioId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.usuarioId == request.auth.uid;
+    }
+
+    // ── COMENTARIOS ──
+    match /comentarios/{comentarioId} {
+      allow read: if true;
+      allow create: if isAuth()
+        && request.resource.data.usuarioId == request.auth.uid
+        && request.resource.data.text.size() <= 500;
+      allow update: if isAuth() && resource.data.usuarioId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.usuarioId == request.auth.uid;
+    }
+  }
+}
